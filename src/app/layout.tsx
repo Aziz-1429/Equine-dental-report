@@ -1,33 +1,31 @@
-import type { Metadata } from "next";
-import { Geist, Lora } from "next/font/google";
-import "./globals.css";
+import './globals.css';
+import type { Metadata, Viewport } from 'next';
+import { Inter } from 'next/font/google';
 
-const fontSans = Geist({
-  variable: "--font-sans",
-  subsets: ["latin"],
-});
-
-const fontDisplay = Lora({
-  variable: "--font-display",
-  subsets: ["latin"],
-});
+const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: "Equine Dental Report",
-  description: "Equine dental examination and reporting tool",
+  title: 'EquiDentum — Equine Dental Report',
+  description:
+    'Mobile-friendly equine dental examination reporting for ambulatory veterinarians.',
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  themeColor: '#441752',
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html
-      lang="en"
-      className={`${fontSans.variable} ${fontDisplay.variable} h-full antialiased`}
-    >
-      <body className="min-h-full flex flex-col font-sans">{children}</body>
+    <html lang="en">
+      <body className={inter.className}>{children}</body>
     </html>
   );
 }
