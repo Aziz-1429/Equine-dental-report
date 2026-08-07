@@ -5,39 +5,40 @@ interface LogoProps {
   size?: 'sm' | 'md' | 'lg';
 }
 
-// Geometric horse silhouette logo
-// The horse faces right in a dressage/collected trot pose
-function HorseIcon({ size = 40, color = '#441752' }: { size?: number; color?: string }) {
+// Trotting horse silhouette — matches the EquiDentum brand mark
+export function HorseIcon({ size = 40, color = '#441752' }: { size?: number; color?: string }) {
   return (
     <svg
-      viewBox="0 0 100 100"
+      viewBox="0 0 240 170"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       width={size}
       height={size}
     >
-      {/* Body — main torso polygon */}
-      <polygon points="55,58 72,52 80,44 74,30 62,28 50,34 42,44 44,58" fill={color} />
-      {/* Neck & head */}
-      <polygon points="62,28 74,30 78,18 72,10 62,12 56,20 58,28" fill={color} />
-      {/* Head detail */}
-      <polygon points="72,10 80,12 82,20 78,18" fill={color} />
-      {/* Ear */}
-      <polygon points="78,10 82,4 86,8 82,12" fill={color} />
-      {/* Muzzle / nose */}
-      <polygon points="80,16 88,18 86,24 80,22" fill={color} />
-      {/* Front raised leg */}
-      <polygon points="50,58 54,58 56,70 60,78 56,80 52,72 48,62" fill={color} />
-      {/* Front supporting leg */}
-      <polygon points="44,58 48,58 48,72 44,78 40,76 42,68 40,58" fill={color} />
-      {/* Hind raised leg */}
-      <polygon points="70,58 74,56 76,68 72,76 68,74 70,66 68,58" fill={color} />
-      {/* Hind supporting leg */}
-      <polygon points="62,60 66,60 64,72 60,80 56,78 60,68 60,60" fill={color} />
       {/* Tail */}
-      <polygon points="80,44 88,40 90,52 84,58 78,56 80,50" fill={color} />
-      {/* Mane along neck */}
-      <polygon points="64,14 68,10 72,14 68,20 64,18" fill={color} opacity="0.7" />
+      <path
+        d="M62,78 C46,84 28,95 16,113 C25,109 34,101 40,95 C34,106 27,117 24,129 C33,120 41,108 47,98 C45,104 44,110 45,116 C52,103 58,89 62,78 Z"
+        fill={color}
+      />
+      {/* Body */}
+      <path
+        d="M58,88 C56,78 62,68 74,64 L140,58 C150,57 158,60 163,66 L168,72 C170,76 170,82 168,88 L166,96 C164,104 156,110 146,110 L80,110 C66,110 55,100 58,88 Z"
+        fill={color}
+      />
+      {/* Neck */}
+      <polygon points="140,58 163,66 172,24 150,48" fill={color} />
+      {/* Head */}
+      <polygon points="150,48 172,24 192,8 205,14 222,30 206,40 185,46 166,50" fill={color} />
+      {/* Ear */}
+      <polygon points="176,20 180,4 190,12 186,24" fill={color} />
+      {/* Hind leg — lifted/trailing */}
+      <path d="M70,106 L82,105 L84,122 L74,140 L64,136 L72,120 Z" fill={color} />
+      {/* Hind leg — planted */}
+      <path d="M90,108 L100,108 L97,158 L89,158 L87,120 Z" fill={color} />
+      {/* Front leg — raised/reaching */}
+      <path d="M120,102 L132,100 L138,122 L148,134 L138,142 L126,128 Z" fill={color} />
+      {/* Front leg — planted */}
+      <path d="M142,106 L152,106 L150,158 L142,158 L140,120 Z" fill={color} />
     </svg>
   );
 }
@@ -84,7 +85,7 @@ export function LogoMark({ className }: { className?: string }) {
   );
 }
 
-// For use in PDF reports (returns plain SVG string props for inline use)
+// For use in PDF reports (plain inline-styled div, no Tailwind dependency needed)
 export function HorseLogoForPDF({ size = 44 }: { size?: number }) {
   return (
     <div
@@ -100,23 +101,7 @@ export function HorseLogoForPDF({ size = 44 }: { size?: number }) {
         flexShrink: 0,
       }}
     >
-      <svg
-        viewBox="0 0 100 100"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        style={{ width: size - 12, height: size - 12 }}
-      >
-        <polygon points="55,58 72,52 80,44 74,30 62,28 50,34 42,44 44,58" fill="#ffffff" />
-        <polygon points="62,28 74,30 78,18 72,10 62,12 56,20 58,28" fill="#ffffff" />
-        <polygon points="72,10 80,12 82,20 78,18" fill="#ffffff" />
-        <polygon points="78,10 82,4 86,8 82,12" fill="#ffffff" />
-        <polygon points="80,16 88,18 86,24 80,22" fill="#ffffff" />
-        <polygon points="50,58 54,58 56,70 60,78 56,80 52,72 48,62" fill="#ffffff" />
-        <polygon points="44,58 48,58 48,72 44,78 40,76 42,68 40,58" fill="#ffffff" />
-        <polygon points="70,58 74,56 76,68 72,76 68,74 70,66 68,58" fill="#ffffff" />
-        <polygon points="62,60 66,60 64,72 60,80 56,78 60,68 60,60" fill="#ffffff" />
-        <polygon points="80,44 88,40 90,52 84,58 78,56 80,50" fill="#ffffff" />
-      </svg>
+      <HorseIcon size={size - 12} color="#ffffff" />
     </div>
   );
 }

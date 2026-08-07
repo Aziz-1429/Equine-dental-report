@@ -15,6 +15,49 @@ export function cycleStatus(s: ToothStatus): ToothStatus {
   return STATUS_ORDER[(STATUS_ORDER.indexOf(s) + 1) % STATUS_ORDER.length];
 }
 
+// ─── Skull silhouette backdrop ────────────────────────────────────────────────
+// A stylized horse-skull side profile drawn in the same 234×180 coordinate
+// space as the tooth grid below, so it frames the chart like an anatomical
+// diagram. Base orientation has the muzzle on the left (incisors near x≈10);
+// panels whose incisors sit on the right instead (`flip`) mirror it.
+export function SkullBackdrop({ flip = false }: { flip?: boolean }) {
+  return (
+    <g transform={flip ? 'translate(234,0) scale(-1,1)' : undefined}>
+      <path
+        d="M4,66
+           C4,58 7,53 12,52
+           C15,42 24,33 36,27
+           C62,16 96,10 132,8
+           C158,7 182,8 200,12
+           C204,4 210,0 216,1
+           C220,4 220,10 216,15
+           C222,24 226,42 224,62
+           C227,72 227,88 223,98
+           C226,108 223,120 214,124
+           C207,136 192,146 170,151
+           C142,158 106,161 74,157
+           C50,154 32,148 20,139
+           C11,142 5,137 6,129
+           C11,124 15,118 16,111
+           C8,103 3,90 3,78
+           C2,74 3,69 4,66 Z"
+        fill="none"
+        stroke="#94a3b8"
+        strokeWidth={1.4}
+        opacity={0.5}
+      />
+      <circle cx={178} cy={42} r={9} fill="none" stroke="#94a3b8" strokeWidth={1.2} opacity={0.5} />
+      <path
+        d="M10,58 C8,62 8,68 12,71 C16,68 16,61 12,58 Z"
+        fill="none"
+        stroke="#94a3b8"
+        strokeWidth={1.2}
+        opacity={0.5}
+      />
+    </g>
+  );
+}
+
 // ─── Tooth geometry helpers ──────────────────────────────────────────────────
 type ToothDef = {
   id: string;
@@ -95,7 +138,7 @@ function SvgTooth({
   compact?: boolean;
 }) {
   const c = C[record.status];
-  const fs = compact ? 7 : 8;
+  const fs = def.w < 14 ? 6.5 : compact ? 7 : 8;
   const cx = def.x + def.w / 2;
   const cy = def.y + def.h / 2;
 
@@ -174,6 +217,8 @@ function ArcadePanel({
           xmlns="http://www.w3.org/2000/svg"
         >
           <rect width="234" height="180" fill="transparent" />
+
+          <SkullBackdrop flip={molarsOnLeft} />
 
           {/* Jaw labels */}
           <text x="2" y="22" fontSize="8" fontWeight="700" fill="#441752" fontFamily="system-ui" style={{ textTransform: 'uppercase', letterSpacing: 0.5 }} opacity={0.8}>
@@ -283,59 +328,67 @@ export function DentalArcadeChart({
   );
 }
 
-// ─── Static read-only version for PDF preview ─────────────────────────────────
+// ─── Static read-only version for the PDF report ──────────────────────────────
+function StaticTooth({ def, record }: { def: ToothDef; record?: ToothRecord }) {
+  const status = record?.status ?? 'normal';
+  const c = C[status];
+  const fs = def.w < 14 ? 6 : 7;
+  const cx = def.x + def.w / 2;
+  const cy = def.y + def.h / 2;
+  return (
+    <g key={def.id}>
+      <rect x={def.x} y={def.y} width={def.w} height={def.h} rx={def.rx ?? 3} fill={c.fill} stroke={c.stroke} strokeWidth={1.5} />
+      <text x={cx} y={cy + fs / 3} textAnchor="middle" fontSize={fs} fontWeight="700" fill={c.text} fontFamily="Helvetica, sans-serif">
+        {def.id}
+      </text>
+    </g>
+  );
+}
+
+function StaticArcadeSVG({
+  upper,
+  lower,
+  teethData,
+  flip,
+}: {
+  upper: ToothDef[];
+  lower: ToothDef[];
+  teethData: Record<string, ToothRecord>;
+  flip: boolean;
+}) {
+  return (
+    <svg viewBox="0 0 234 180" width="100%" style={{ maxWidth: 350, display: 'block' }} xmlns="http://www.w3.org/2000/svg">
+      <SkullBackdrop flip={flip} />
+      <line x1="8" y1="96" x2="226" y2="96" stroke="#441752" strokeWidth="0.8" strokeDasharray="4 3" opacity="0.3" />
+      {upper.map((def) => (
+        <StaticTooth key={def.id} def={def} record={teethData[def.id]} />
+      ))}
+      {lower.map((def) => (
+        <StaticTooth key={def.id} def={def} record={teethData[def.id]} />
+      ))}
+    </svg>
+  );
+}
+
 export function DentalArcadeChartStatic({
   teethData,
 }: {
   teethData: Record<string, ToothRecord>;
 }) {
-  const allQuadrants = [
-    { label: 'Right Upper / Lower (Quads 1 & 4)', upper: URX, lower: LRX },
-    { label: 'Left Upper / Lower (Quads 2 & 3)', upper: ULX, lower: LLX },
-  ];
-
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      {allQuadrants.map((q) => (
-        <div key={q.label}>
-          <div style={{ fontSize: 8, fontWeight: 700, color: '#441752', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>
-            {q.label}
-          </div>
-          <svg
-            viewBox="0 0 234 180"
-            width="700"
-            height="160"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <rect width="234" height="180" fill="transparent" />
-            <line x1="8" y1="96" x2="226" y2="96" stroke="#441752" strokeWidth="0.8" strokeDasharray="4 3" opacity="0.3" />
-            {q.upper.map((def) => {
-              const record = teethData[def.id] ?? { id: def.id, status: 'normal' as ToothStatus };
-              const c = C[record.status];
-              const cx = def.x + def.w / 2;
-              const cy = def.y + def.h / 2;
-              return (
-                <g key={def.id}>
-                  <rect x={def.x} y={def.y} width={def.w} height={def.h} rx={def.rx ?? 3} fill={c.fill} stroke={c.stroke} strokeWidth={1.5} />
-                  <text x={cx} y={cy + 3} textAnchor="middle" fontSize={7} fontWeight="700" fill={c.text} fontFamily="Helvetica, sans-serif">{def.id}</text>
-                </g>
-              );
-            })}
-            {q.lower.map((def) => {
-              const record = teethData[def.id] ?? { id: def.id, status: 'normal' as ToothStatus };
-              const c = C[record.status];
-              const cx = def.x + def.w / 2;
-              const cy = def.y + def.h / 2;
-              return (
-                <g key={def.id}>
-                  <rect x={def.x} y={def.y} width={def.w} height={def.h} rx={def.rx ?? 3} fill={c.fill} stroke={c.stroke} strokeWidth={1.5} />
-                  <text x={cx} y={cy + 3} textAnchor="middle" fontSize={7} fontWeight="700" fill={c.text} fontFamily="Helvetica, sans-serif">{def.id}</text>
-                </g>
-              );
-            })}
-          </svg>
+    <div style={{ display: 'flex', gap: 20, justifyContent: 'space-between' }}>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 8, fontWeight: 700, color: '#441752', letterSpacing: 0.5, marginBottom: 4 }}>
+          RIGHT SIDE — QUADS 1 &amp; 4
         </div>
-      ))}
+        <StaticArcadeSVG upper={URX} lower={LRX} teethData={teethData} flip={true} />
+      </div>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 8, fontWeight: 700, color: '#441752', letterSpacing: 0.5, marginBottom: 4 }}>
+          LEFT SIDE — QUADS 2 &amp; 3
+        </div>
+        <StaticArcadeSVG upper={ULX} lower={LLX} teethData={teethData} flip={false} />
+      </div>
     </div>
   );
 }
