@@ -1,9 +1,12 @@
 export type ToothStatus = 'normal' | 'attention' | 'pathology' | 'absent';
+export type ToothSeverity = 'Mild' | 'Moderate' | 'Severe' | '';
 
 export interface ToothRecord {
   id: string;
   status: ToothStatus;
-  note?: string;
+  findings: string[];
+  severity: ToothSeverity;
+  note: string;
 }
 
 export interface PathologyFinding {
@@ -135,6 +138,33 @@ export const LOWER_LEFT_TEETH = [
   '401', '402', '403', '404', '406', '407', '408', '409', '410', '411',
 ];
 
+// Findings loggable for an individual tooth via the tooth detail modal.
+// Reference: Floyd MR, "The Modified Triadan System: Nomenclature for
+// Veterinary Dentistry," J Vet Dent 1991;8(4):18-19.
+export const TOOTH_FINDING_OPTIONS = [
+  'Excessive Transverse Ridges (ETR)',
+  'Sharp Enamel Points',
+  'Hook',
+  'Ramp',
+  'Step Mouth',
+  'Wave Mouth',
+  'Periodontal Pocket',
+  'Diastema / Feed Packing',
+  'Fracture',
+  'Missing Tooth',
+] as const;
+
+export const TOOTH_SEVERITY_OPTIONS = ['Mild', 'Moderate', 'Severe'] as const;
+
+export function toothType(toothId: string): string {
+  const suffix = toothId.slice(-2);
+  if (['01', '02', '03'].includes(suffix)) return 'Incisor';
+  if (suffix === '04') return 'Canine';
+  if (['06', '07', '08'].includes(suffix)) return 'Premolar';
+  if (['09', '10', '11'].includes(suffix)) return 'Molar';
+  return 'Tooth';
+}
+
 export const TOOTH_GROUPS = [
   { label: 'Incisors', ids: ['01', '02', '03'] },
   { label: 'Canine', ids: ['04'] },
@@ -155,7 +185,7 @@ export function createInitialTeeth(): Record<string, ToothRecord> {
   ];
   const teeth: Record<string, ToothRecord> = {};
   for (const id of all) {
-    teeth[id] = { id, status: 'normal' };
+    teeth[id] = { id, status: 'normal', findings: [], severity: '', note: '' };
   }
   return teeth;
 }

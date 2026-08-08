@@ -11,9 +11,6 @@ const C = {
 } as const;
 
 const STATUS_ORDER: ToothStatus[] = ['normal', 'attention', 'pathology', 'absent'];
-export function cycleStatus(s: ToothStatus): ToothStatus {
-  return STATUS_ORDER[(STATUS_ORDER.indexOf(s) + 1) % STATUS_ORDER.length];
-}
 
 // ─── Skull silhouette backdrop ────────────────────────────────────────────────
 // A stylized horse-skull side profile drawn in the same 234×180 coordinate
@@ -141,6 +138,7 @@ function SvgTooth({
   const fs = def.w < 14 ? 6.5 : compact ? 7 : 8;
   const cx = def.x + def.w / 2;
   const cy = def.y + def.h / 2;
+  const hasFindings = record.findings.length > 0 || Boolean(record.note);
 
   return (
     <g
@@ -182,6 +180,9 @@ function SvgTooth({
       >
         {def.id}
       </text>
+      {hasFindings && (
+        <circle cx={def.x + def.w - 4} cy={def.y + 5} r={2.5} fill="#d97706" stroke="#ffffff" strokeWidth={0.6} />
+      )}
     </g>
   );
 }
@@ -192,7 +193,7 @@ function ArcadePanel({
   upperTeeth,
   lowerTeeth,
   teethData,
-  onToggle,
+  onToothClick,
   viewBox,
   molarsOnLeft,
 }: {
@@ -200,7 +201,7 @@ function ArcadePanel({
   upperTeeth: ToothDef[];
   lowerTeeth: ToothDef[];
   teethData: Record<string, ToothRecord>;
-  onToggle: (id: string) => void;
+  onToothClick: (id: string) => void;
   viewBox: string;
   molarsOnLeft: boolean;
 }) {
@@ -254,8 +255,8 @@ function ArcadePanel({
             <SvgTooth
               key={def.id}
               def={def}
-              record={teethData[def.id] ?? { id: def.id, status: 'normal' }}
-              onClick={() => onToggle(def.id)}
+              record={teethData[def.id] ?? { id: def.id, status: 'normal', findings: [], severity: '', note: '' }}
+              onClick={() => onToothClick(def.id)}
             />
           ))}
 
@@ -264,8 +265,8 @@ function ArcadePanel({
             <SvgTooth
               key={def.id}
               def={def}
-              record={teethData[def.id] ?? { id: def.id, status: 'normal' }}
-              onClick={() => onToggle(def.id)}
+              record={teethData[def.id] ?? { id: def.id, status: 'normal', findings: [], severity: '', note: '' }}
+              onClick={() => onToothClick(def.id)}
             />
           ))}
         </svg>
@@ -277,16 +278,16 @@ function ArcadePanel({
 // ─── Exported interactive chart ───────────────────────────────────────────────
 export function DentalArcadeChart({
   teethData,
-  onToggle,
+  onToothClick,
 }: {
   teethData: Record<string, ToothRecord>;
-  onToggle: (id: string) => void;
+  onToothClick: (id: string) => void;
 }) {
   return (
     <div className="space-y-6">
       {/* Legend */}
       <div className="flex flex-wrap items-center gap-3 rounded-lg border border-[#E8E8E8] bg-[#fafafa] px-4 py-2.5 dark:border-slate-800 dark:bg-slate-900">
-        <span className="text-xs font-semibold text-slate-500">Tap tooth to cycle:</span>
+        <span className="text-xs font-semibold text-slate-500">Tap a tooth to log findings:</span>
         {STATUS_ORDER.map((s) => {
           const cfg = C[s];
           return (
@@ -309,7 +310,7 @@ export function DentalArcadeChart({
         upperTeeth={URX}
         lowerTeeth={LRX}
         teethData={teethData}
-        onToggle={onToggle}
+        onToothClick={onToothClick}
         viewBox="0 0 234 180"
         molarsOnLeft={true}
       />
@@ -320,7 +321,7 @@ export function DentalArcadeChart({
         upperTeeth={ULX}
         lowerTeeth={LLX}
         teethData={teethData}
-        onToggle={onToggle}
+        onToothClick={onToothClick}
         viewBox="0 0 234 180"
         molarsOnLeft={false}
       />
