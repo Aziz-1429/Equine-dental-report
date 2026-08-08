@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useFormContext } from 'react-hook-form';
 import { Bone, Activity, Eye } from 'lucide-react';
 
@@ -13,20 +14,18 @@ import {
 } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import { DentalReportData, ToothRecord } from '@/lib/types';
-import { DentalArcadeChart, cycleStatus } from './dental-chart-svg';
+import { DentalArcadeChart } from './dental-chart-svg';
+import { ToothModal } from './tooth-modal';
 
 export function Step3Charting() {
   const { watch, setValue, register } = useFormContext<DentalReportData>();
   const pathologies = watch('pathologies');
   const softTissue = watch('softTissue');
   const teethData = watch('teeth');
+  const [selectedToothId, setSelectedToothId] = useState<string | null>(null);
 
-  const toggleTooth = (id: string) => {
-    const current = watch(`teeth.${id}`) as ToothRecord;
-    setValue(`teeth.${id}`, {
-      ...current,
-      status: cycleStatus(current.status),
-    });
+  const saveTooth = (id: string, record: Omit<ToothRecord, 'id'>) => {
+    setValue(`teeth.${id}`, { id, ...record });
   };
 
   const togglePathology = (idx: number) => {
@@ -46,7 +45,7 @@ export function Step3Charting() {
           Dental Examination Charting
         </h2>
         <p className="mt-1 text-sm text-slate-500">
-          Tap each tooth to cycle through status. Toggle pathologies below.
+          Tap a tooth to log its status and findings. Toggle whole-horse pathologies below.
         </p>
       </div>
 
@@ -60,15 +59,23 @@ export function Step3Charting() {
             <div>
               <CardTitle className="text-lg">Dental Arcade Chart</CardTitle>
               <CardDescription>
-                Modified Triadan — tap any tooth to cycle: Normal → Attention → Pathology → Absent
+                Modified Triadan — tap any tooth to log status, findings, severity, and notes
               </CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent>
-          <DentalArcadeChart teethData={teethData} onToggle={toggleTooth} />
+          <DentalArcadeChart teethData={teethData} onToothClick={setSelectedToothId} />
         </CardContent>
       </Card>
+
+      <ToothModal
+        open={selectedToothId !== null}
+        toothId={selectedToothId}
+        record={selectedToothId ? teethData[selectedToothId] : null}
+        onSave={saveTooth}
+        onClose={() => setSelectedToothId(null)}
+      />
 
       {/* Pathology toggles */}
       <Card>

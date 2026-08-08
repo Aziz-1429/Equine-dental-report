@@ -1,6 +1,6 @@
 'use client';
 
-import { DentalReportData, ToothStatus } from '@/lib/types';
+import { DentalReportData, ToothRecord, ToothStatus, toothType } from '@/lib/types';
 import { DentalArcadeChartStatic } from './dental-chart-svg';
 import { HorseLogoForPDF } from '@/components/logo';
 
@@ -50,6 +50,12 @@ function Tag({ label, color = 'brand' }: { label: string; color?: 'brand' | 'amb
   return <span style={{ display: 'inline-block', fontSize: 9, padding: '3px 8px', borderRadius: 4, backgroundColor: c.bg, color: c.text, margin: '2px 3px 2px 0', fontWeight: 600 }}>{label}</span>;
 }
 
+function toothFindingsList(teeth: Record<string, ToothRecord>) {
+  return Object.values(teeth)
+    .filter((t) => t.status !== 'normal' || t.findings.length > 0 || Boolean(t.note))
+    .sort((a, b) => Number(a.id) - Number(b.id));
+}
+
 function BrandLogo() {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -63,6 +69,7 @@ function BrandLogo() {
 }
 
 export function ReportPreview({ data }: { data: DentalReportData }) {
+  const toothFindings = toothFindingsList(data.teeth);
   const checkedPathologies = data.pathologies.filter((p) => p.checked);
   const checkedSoftTissue = data.softTissue.filter((s) => s.checked);
   const checkedTreatments = data.treatments.filter((t) => t.checked);
@@ -138,6 +145,37 @@ export function ReportPreview({ data }: { data: DentalReportData }) {
       <div style={{ border: `0.5px solid ${SECONDARY_COLOR}`, borderRadius: 4, padding: 12, marginBottom: 6 }}>
         <DentalArcadeChartStatic teethData={data.teeth} />
       </div>
+
+      {/* Tooth-level findings */}
+      {toothFindings.length > 0 && (
+        <>
+          <SectionTitle>Tooth-Level Findings</SectionTitle>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 9.5 }}>
+            <thead>
+              <tr style={{ textAlign: 'left', borderBottom: `0.5px solid ${SECONDARY_COLOR}`, color: '#64748b' }}>
+                <th style={{ padding: '3px 6px 3px 0', fontWeight: 600 }}>TOOTH</th>
+                <th style={{ padding: '3px 6px', fontWeight: 600 }}>TYPE</th>
+                <th style={{ padding: '3px 6px', fontWeight: 600 }}>STATUS</th>
+                <th style={{ padding: '3px 6px', fontWeight: 600 }}>FINDINGS</th>
+                <th style={{ padding: '3px 6px', fontWeight: 600 }}>SEVERITY</th>
+                <th style={{ padding: '3px 0 3px 6px', fontWeight: 600 }}>NOTES</th>
+              </tr>
+            </thead>
+            <tbody>
+              {toothFindings.map((t) => (
+                <tr key={t.id} style={{ borderBottom: '0.5px solid #f1f5f9', verticalAlign: 'top' }}>
+                  <td style={{ padding: '4px 6px 4px 0', fontWeight: 700, color: BRAND_COLOR }}>{t.id}</td>
+                  <td style={{ padding: '4px 6px', color: '#64748b' }}>{toothType(t.id)}</td>
+                  <td style={{ padding: '4px 6px', color: '#334155' }}>{LEGEND[t.status].label}</td>
+                  <td style={{ padding: '4px 6px', color: '#334155' }}>{t.findings.join(', ') || '—'}</td>
+                  <td style={{ padding: '4px 6px', color: '#334155' }}>{t.severity || '—'}</td>
+                  <td style={{ padding: '4px 0 4px 6px', color: '#334155' }}>{t.note || '—'}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
 
       {/* Pathologies */}
       {checkedPathologies.length > 0 && (
