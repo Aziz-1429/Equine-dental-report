@@ -1,7 +1,29 @@
-import { DentalReportData, createInitialReport } from './types';
+import { DentalReportData, ToothRecord, createInitialReport } from './types';
 
 const STORAGE_KEY = 'equine-dental-report-draft';
 const SAVED_KEY = 'equine-dental-report-saved-at';
+
+// Fills in fields added to ToothRecord after a draft may have been saved
+// (e.g. findings/severity/note), so old localStorage drafts don't crash
+// components that assume the current shape.
+function normalizeTeeth(
+  teeth: Record<string, Partial<ToothRecord>> | undefined,
+  fallback: Record<string, ToothRecord>
+): Record<string, ToothRecord> {
+  if (!teeth) return fallback;
+  const normalized: Record<string, ToothRecord> = {};
+  for (const id of Object.keys(fallback)) {
+    const saved = teeth[id];
+    normalized[id] = {
+      id,
+      status: saved?.status ?? 'normal',
+      findings: saved?.findings ?? [],
+      severity: saved?.severity ?? '',
+      note: saved?.note ?? '',
+    };
+  }
+  return normalized;
+}
 
 export function loadDraft(): DentalReportData {
   if (typeof window === 'undefined') return createInitialReport();
@@ -10,7 +32,11 @@ export function loadDraft(): DentalReportData {
     if (!raw) return createInitialReport();
     const parsed = JSON.parse(raw) as Partial<DentalReportData>;
     const base = createInitialReport();
-    return { ...base, ...parsed };
+    return {
+      ...base,
+      ...parsed,
+      teeth: normalizeTeeth(parsed.teeth, base.teeth),
+    };
   } catch {
     return createInitialReport();
   }
