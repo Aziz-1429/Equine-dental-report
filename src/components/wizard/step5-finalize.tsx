@@ -68,14 +68,20 @@ export function Step5Finalize({ dbId }: { dbId?: string | null }) {
       const imgWidth = pdfWidth;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-      if (imgHeight <= pdfHeight) {
+      // A small tolerance absorbs sub-millimeter rounding from the
+      // px->mm conversion above — without it, content landing a
+      // fraction of a mm over one page height triggers a second page
+      // that's almost entirely blank.
+      const PAGE_OVERFLOW_TOLERANCE_MM = 2;
+
+      if (imgHeight <= pdfHeight + PAGE_OVERFLOW_TOLERANCE_MM) {
         pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
       } else {
         let heightLeft = imgHeight;
         let position = 0;
         pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
         heightLeft -= pdfHeight;
-        while (heightLeft > 0) {
+        while (heightLeft > PAGE_OVERFLOW_TOLERANCE_MM) {
           position -= pdfHeight;
           pdf.addPage();
           pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
