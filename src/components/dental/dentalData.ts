@@ -141,6 +141,46 @@ const SIDE_104_111_REGIONS = [
   { toothNumber: '404', points: '1190,786 1222,780 1258,796 1262,822 1236,840 1204,832 1190,808', labelX: 1220, labelY: 810 },
 ];
 
+/**
+ * Tooth hit-area geometry for the "205–211 / 305–311" reference chart
+ * (public/dental-chart/triadan-205-211-side.png, 1536×1024 — same kind
+ * of asset as the other side: an SVG wrapping a single AI-generated
+ * raster with no vector tooth data, hand-traced the same way).
+ *
+ * ASSUMPTION — label correction: the raster image itself has three
+ * mislabeled teeth (a generation artifact in the source art, not
+ * something introduced here):
+ *   - the premolar before the purple molars is printed "202", which
+ *     would be an incisor and can't be in this position — corrected to
+ *     208, continuing 206, 207 in sequence.
+ *   - the first purple molar is printed "205", duplicating the wolf
+ *     tooth's label a few millimeters away — corrected to 209.
+ *   - the first purple mandibular molar is printed "319", which isn't
+ *     a valid Triadan number (max is 311) — corrected to 309.
+ * Every other tooth in this image is printed correctly and used as-is.
+ * The image also repeats "104"/"304" as anatomical landmarks near the
+ * canine gap; those are omitted here since tooth 104 is already a
+ * region on the 104–111 side and duplicating it under a second chart
+ * side would create two independent hit areas writing to the same
+ * exam record.
+ */
+const SIDE_205_211_REGIONS = [
+  { toothNumber: '205', points: '410,655 428,650 442,665 444,695 432,712 415,708 408,680', labelX: 470, labelY: 665 },
+  { toothNumber: '206', points: '450,545 480,538 515,558 518,610 508,648 490,652 468,648 448,610 445,570', labelX: 483, labelY: 595 },
+  { toothNumber: '207', points: '525,535 555,528 592,538 596,600 588,640 570,648 548,645 528,605 524,565', labelX: 560, labelY: 590 },
+  { toothNumber: '208', points: '600,525 628,518 662,528 668,595 660,638 642,648 618,645 602,600 598,560', labelX: 634, labelY: 585 },
+  { toothNumber: '209', points: '678,468 705,460 738,468 748,530 745,600 735,645 715,650 692,610 680,540', labelX: 713, labelY: 555 },
+  { toothNumber: '210', points: '748,455 778,448 808,462 815,530 810,598 798,642 775,648 755,600 748,530', labelX: 781, labelY: 550 },
+  { toothNumber: '211', points: '818,442 850,432 888,445 905,470 900,540 888,610 865,655 838,648 820,590 815,510', labelX: 858, labelY: 545 },
+  { toothNumber: '305', points: '440,758 460,752 468,775 465,805 450,812 435,798 436,772', labelX: 405, labelY: 800 },
+  { toothNumber: '306', points: '450,755 480,748 515,758 520,805 512,842 492,850 468,845 448,805 446,775', labelX: 483, labelY: 800 },
+  { toothNumber: '307', points: '525,752 558,748 592,758 596,802 588,842 568,850 545,845 527,802 524,770', labelX: 560, labelY: 798 },
+  { toothNumber: '308', points: '600,752 630,748 665,758 670,802 662,845 642,850 618,845 602,800 598,770', labelX: 634, labelY: 798 },
+  { toothNumber: '309', points: '678,745 708,742 742,752 748,800 742,845 722,858 698,850 680,802 676,770', labelX: 712, labelY: 800 },
+  { toothNumber: '310', points: '748,740 780,735 812,748 818,800 812,845 792,855 768,848 750,800 746,762', labelX: 781, labelY: 798 },
+  { toothNumber: '311', points: '818,730 852,722 888,735 908,760 902,810 892,845 868,855 842,848 822,795 815,755', labelX: 860, labelY: 790 },
+];
+
 export const DENTAL_CHART_SIDES: DentalChartSide[] = [
   {
     id: '104-111',
@@ -149,6 +189,14 @@ export const DENTAL_CHART_SIDES: DentalChartSide[] = [
     viewBoxWidth: 1536,
     viewBoxHeight: 1024,
     regions: SIDE_104_111_REGIONS,
+  },
+  {
+    id: '205-211',
+    label: 'Left side — Triadan 205–211 / 305–311',
+    backgroundSrc: '/dental-chart/triadan-205-211-side.png',
+    viewBoxWidth: 1536,
+    viewBoxHeight: 1024,
+    regions: SIDE_205_211_REGIONS,
   },
 ];
 
