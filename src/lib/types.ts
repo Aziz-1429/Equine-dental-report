@@ -46,7 +46,7 @@ export interface DentalReportData {
   breed: string;
   sex: string;
   bodyConditionScore: string;
-  horseUse: string;
+  color: string;
   sedationUsed: boolean;
   sedationDrugs: SedationEntry[];
 
@@ -75,10 +75,9 @@ export const SEDATION_DRUGS = [
   'Romifidine', 'Diazepam', 'Ketamine',
 ] as const;
 
-export const HORSE_USE_OPTIONS = [
-  'Racing', 'Endurance', 'Show Jumping', 'Dressage', 'Eventing',
-  'Polo', 'Breeding', 'Pleasure / Trail', 'Western', 'Working / Ranch',
-  'Retired', 'Other',
+export const HORSE_COLOR_OPTIONS = [
+  'Bay', 'Black', 'Chestnut', 'Sorrel', 'Grey', 'Palomino',
+  'Buckskin', 'Dun', 'Roan', 'Pinto / Paint', 'White', 'Other',
 ] as const;
 
 export const BCS_OPTIONS = [
@@ -173,7 +172,7 @@ export function createInitialReport(): DentalReportData {
     breed: '',
     sex: '',
     bodyConditionScore: '',
-    horseUse: '',
+    color: '',
     sedationUsed: false,
     sedationDrugs: createInitialSedationDrugs(),
     teeth: createInitialTeeth(),

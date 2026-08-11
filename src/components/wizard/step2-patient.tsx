@@ -26,7 +26,7 @@ import {
   HORSE_BREEDS,
   SEX_OPTIONS,
   BCS_OPTIONS,
-  HORSE_USE_OPTIONS,
+  HORSE_COLOR_OPTIONS,
   SEDATION_DRUGS,
 } from '@/lib/types';
 
@@ -166,18 +166,18 @@ export function Step2Patient() {
             </div>
 
             <div className="space-y-2">
-              <Label className="text-sm font-semibold">Horse Use / Discipline</Label>
+              <Label className="text-sm font-semibold">Color</Label>
               <Select
-                value={watch('horseUse')}
-                onValueChange={(v) => setValue('horseUse', v)}
+                value={watch('color')}
+                onValueChange={(v) => setValue('color', v)}
               >
                 <SelectTrigger className="h-12 text-base">
-                  <SelectValue placeholder="Select use" />
+                  <SelectValue placeholder="Select color" />
                 </SelectTrigger>
                 <SelectContent>
-                  {HORSE_USE_OPTIONS.map((u) => (
-                    <SelectItem key={u} value={u}>
-                      {u}
+                  {HORSE_COLOR_OPTIONS.map((c) => (
+                    <SelectItem key={c} value={c}>
+                      {c}
                     </SelectItem>
                   ))}
                 </SelectContent>

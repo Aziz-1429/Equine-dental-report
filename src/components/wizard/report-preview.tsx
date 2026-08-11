@@ -1,8 +1,7 @@
 'use client';
 
 import { DentalReportData, ToothFinding, toothType } from '@/lib/types';
-import { EquineDentalChart } from '@/components/dental/EquineDentalChart';
-import { DENTAL_CHART_SIDES, getStatusOption, TOOTH_STATUS_OPTIONS } from '@/components/dental/dentalData';
+import { getStatusOption } from '@/components/dental/dentalData';
 import { HorseLogoForPDF } from '@/components/logo';
 
 const BRAND_COLOR = '#441752';
@@ -92,7 +91,7 @@ export function ReportPreview({ data }: { data: DentalReportData }) {
         <FieldBox label="Breed" value={data.breed} />
         <FieldBox label="Sex" value={data.sex} />
         <FieldBox label="Body Condition Score" value={data.bodyConditionScore} />
-        <FieldBox label="Horse Use / Discipline" value={data.horseUse} />
+        <FieldBox label="Color" value={data.color} />
       </div>
 
       {/* Sedation */}
@@ -109,37 +108,11 @@ export function ReportPreview({ data }: { data: DentalReportData }) {
         </>
       )}
 
-      {/* Dental Chart */}
-      <SectionTitle>Dental Arcade Chart</SectionTitle>
-
-      {/* Legend */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 8, marginTop: 6 }}>
-        {TOOTH_STATUS_OPTIONS.map((option) => (
-          <div key={option.value} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <div style={{ width: 12, height: 12, borderRadius: 2, border: '1px solid #94a3b8', backgroundColor: '#f8fafc', fontSize: 9, textAlign: 'center', lineHeight: '11px' }}>
-              {option.glyph}
-            </div>
-            <span style={{ fontSize: 8, color: '#64748b' }}>{option.label}</span>
-          </div>
-        ))}
-      </div>
-
-      {/* Arcade charts — real anatomical reference for cheek teeth, schematic grid for incisors */}
-      <div style={{ border: `0.5px solid ${SECONDARY_COLOR}`, borderRadius: 4, padding: 12, marginBottom: 6 }}>
-        {DENTAL_CHART_SIDES.map((side) => (
-          <div key={side.id} style={{ marginBottom: 10 }}>
-            <div style={{ fontSize: 8, fontWeight: 600, color: '#64748b', marginBottom: 4, textAlign: 'center' }}>
-              {side.label.toUpperCase()}
-            </div>
-            <EquineDentalChart
-              side={side}
-              exam={{ teeth: data.teeth, generalNotes: '' }}
-              selectedTooth={null}
-              onSelectTooth={() => {}}
-            />
-          </div>
-        ))}
-      </div>
+      {/* The dental arcade chart itself (original skull artwork plus
+          edge-outline exam highlights) is rendered as its own dedicated
+          page directly by the PDF generator — see lib/pdfDentalChart.ts —
+          rather than captured from this HTML preview, so the original
+          anatomical images always come through intact in the download. */}
 
       {/* Tooth-level findings */}
       {toothFindings.length > 0 && (

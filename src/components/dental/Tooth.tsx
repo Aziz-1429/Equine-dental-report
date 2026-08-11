@@ -17,12 +17,17 @@ interface ToothProps {
 
 /**
  * One tooth's clickable SVG region: `<g id="tooth-{number}">` containing
- * a polygon hit area plus its Triadan label. Purely presentational —
- * reads the finding it's given, never holds exam state itself.
+ * a transparent hit area plus an edge-only status outline. On real
+ * anatomical-photo sides the tooth is NEVER filled — the reference
+ * artwork underneath must stay fully visible, so examination status is
+ * communicated purely by the outline color/style traced along the
+ * tooth's own boundary. The schematic (no-photo) incisor grid has no
+ * artwork to protect, so it keeps a plain filled box for legibility.
  */
 export function Tooth({ region, finding, selected, onSelect, hasBackground }: ToothProps) {
   const status = getStatusOption(finding.status);
   const isUntouched = !finding.examined;
+  const isBroken = finding.status === 'missing' || finding.status === 'extracted';
 
   const handleKeyDown = (e: KeyboardEvent<SVGGElement>) => {
     if (e.key === 'Enter' || e.key === ' ') {
@@ -48,31 +53,39 @@ export function Tooth({ region, finding, selected, onSelect, hasBackground }: To
     >
       <title>{`Tooth ${region.toothNumber} — Click to examine`}</title>
 
+      {/* Interaction layer: always transparent on real-photo sides so
+          the underlying anatomy is never obscured. Only the schematic
+          (no-photo) grid gets a visible resting fill, since there's no
+          artwork underneath it to protect. */}
       <polygon
         points={region.points}
-        className={[
-          'transition-colors duration-150',
-          // fill: reflects examined status, independent of selection
-          isUntouched
-            ? hasBackground
-              ? 'fill-transparent hover:fill-primary/10'
-              : 'fill-white hover:fill-primary/10'
-            : `${status.fillClassName} fill-opacity-55`,
-          // stroke: selection always wins over the untouched/examined state,
-          // so the two never compete for the same CSS property
-          selected
-            ? 'stroke-[5px] stroke-primary drop-shadow-[0_0_6px_rgba(68,23,82,0.55)]'
+        className={
+          hasBackground
+            ? 'fill-transparent stroke-none'
             : isUntouched
-              ? hasBackground
-                ? 'stroke-transparent hover:stroke-primary/40 stroke-2'
-                : 'stroke-slate-300 hover:stroke-primary/40 stroke-2'
-              : 'stroke-2',
-        ]
-          .filter(Boolean)
-          .join(' ')}
-        strokeDasharray={finding.status === 'missing' || finding.status === 'extracted' ? '10 6' : undefined}
+              ? 'fill-white stroke-slate-300 stroke-2 hover:fill-primary/10'
+              : 'fill-white stroke-2'
+        }
         vectorEffect="non-scaling-stroke"
       />
+
+      {/* Highlight layer: edge-only outline, fill="none" always, drawn
+          on top of the (untouched) artwork. Only rendered when the
+          tooth has something to show — selection or an exam status. */}
+      {(selected || (!isUntouched && hasBackground)) && (
+        <polygon
+          points={region.points}
+          fill="none"
+          className={
+            selected
+              ? 'stroke-primary drop-shadow-[0_0_4px_rgba(68,23,82,0.6)]'
+              : status.strokeClassName
+          }
+          strokeWidth={selected ? 5 : 3}
+          strokeDasharray={!selected && isBroken ? '10 6' : undefined}
+          vectorEffect="non-scaling-stroke"
+        />
+      )}
 
       {/* On schematic (no-image) charts there's no baked-in tooth number
           to rely on, so the number is always drawn. */}
@@ -88,13 +101,16 @@ export function Tooth({ region, finding, selected, onSelect, hasBackground }: To
       )}
 
       {/* Non-color status glyph — keeps the chart legible for
-          color-vision-deficient users without relying on hue alone. */}
-      {!isUntouched && (
+          color-vision-deficient users without relying on hue alone.
+          Only drawn on real-photo sides where the outline alone might
+          not read as clearly as it does against a plain schematic box. */}
+      {!isUntouched && hasBackground && (
         <text
           x={region.labelX}
-          y={hasBackground ? region.labelY - 26 : region.labelY + 26}
+          y={region.labelY - 26}
           textAnchor="middle"
-          className="pointer-events-none select-none fill-slate-700 text-[22px] font-bold"
+          className="pointer-events-none select-none fill-slate-900 text-[20px] font-bold"
+          style={{ paintOrder: 'stroke', stroke: '#fff', strokeWidth: 3 }}
         >
           {status.glyph}
         </text>
