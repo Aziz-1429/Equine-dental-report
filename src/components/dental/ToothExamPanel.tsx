@@ -13,8 +13,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { TOOTH_STATUS_OPTIONS } from './dentalData';
-import { ToothFinding, ToothStatus } from './dentalTypes';
+import { cn } from '@/lib/utils';
+import { TOOTH_STATUS_OPTIONS, TOOTH_FINDING_OPTIONS, TOOTH_SEVERITY_OPTIONS } from './dentalData';
+import { ToothFinding, ToothStatus, ToothSeverity } from './dentalTypes';
 
 interface ToothExamPanelProps {
   finding: ToothFinding;
@@ -38,6 +39,13 @@ export function ToothExamPanel({ finding, onChange, onMarkStatus, onClear, onClo
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
+
+  const toggleFinding = (f: string) => {
+    const next = finding.findings.includes(f)
+      ? finding.findings.filter((x) => x !== f)
+      : [...finding.findings, f];
+    onChange({ findings: next });
+  };
 
   return (
     <div className="flex h-full flex-col">
@@ -78,13 +86,43 @@ export function ToothExamPanel({ finding, onChange, onMarkStatus, onClear, onClo
 
         <div className="space-y-1.5">
           <Label className="text-xs font-semibold">Findings</Label>
-          <Textarea
-            value={finding.findings}
-            onChange={(e) => onChange({ findings: e.target.value })}
-            rows={2}
-            placeholder="Clinical findings for this tooth..."
-            className="text-sm"
-          />
+          <div className="grid grid-cols-1 gap-1.5">
+            {TOOTH_FINDING_OPTIONS.map((f) => (
+              <label
+                key={f}
+                className="flex cursor-pointer items-center gap-2 rounded-md border border-slate-200 px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+              >
+                <input
+                  type="checkbox"
+                  checked={finding.findings.includes(f)}
+                  onChange={() => toggleFinding(f)}
+                  className="h-3.5 w-3.5 accent-primary"
+                />
+                {f}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          <Label className="text-xs font-semibold">Severity</Label>
+          <div className="flex gap-2">
+            {TOOTH_SEVERITY_OPTIONS.map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => onChange({ severity: finding.severity === s ? ('' as ToothSeverity) : s })}
+                className={cn(
+                  'rounded-full border px-3 py-1 text-xs font-medium transition-colors',
+                  finding.severity === s
+                    ? 'border-transparent bg-primary text-primary-foreground'
+                    : 'border-slate-300 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800'
+                )}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="space-y-1.5">

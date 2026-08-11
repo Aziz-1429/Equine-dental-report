@@ -34,13 +34,18 @@ export interface ToothStatusOption {
   swatchClassName: string;
 }
 
+export type ToothSeverity = 'Mild' | 'Moderate' | 'Severe' | '';
+
 /** The examination record for one tooth. This is the source of truth —
  * the SVG only ever reads from this, never stores exam data itself. */
 export interface ToothFinding {
   toothNumber: string;
   examined: boolean;
   status: ToothStatus;
-  findings: string;
+  /** Checklist of specific findings (from TOOTH_FINDING_OPTIONS), not
+   * free text — keeps charting consistent across exams/practitioners. */
+  findings: string[];
+  severity: ToothSeverity;
   treatment: string;
   recommendation: string;
   notes: string;

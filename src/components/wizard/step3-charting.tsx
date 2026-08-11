@@ -13,19 +13,37 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import { DentalReportData, ToothRecord } from '@/lib/types';
-import { DentalArcadeChart } from './dental-chart-svg';
-import { ToothModal } from './tooth-modal';
+import { DentalReportData, ToothFinding, ToothStatus } from '@/lib/types';
+import { EquineDentalChart } from '@/components/dental/EquineDentalChart';
+import { ToothExamPanel } from '@/components/dental/ToothExamPanel';
+import { DentalLegend } from '@/components/dental/DentalLegend';
+import { DENTAL_CHART_SIDES, createEmptyFinding } from '@/components/dental/dentalData';
 
 export function Step3Charting() {
   const { watch, setValue, register } = useFormContext<DentalReportData>();
   const pathologies = watch('pathologies');
   const softTissue = watch('softTissue');
   const teethData = watch('teeth');
-  const [selectedToothId, setSelectedToothId] = useState<string | null>(null);
+  const [selectedTooth, setSelectedTooth] = useState<string | null>(null);
 
-  const saveTooth = (id: string, record: Omit<ToothRecord, 'id'>) => {
-    setValue(`teeth.${id}`, { id, ...record });
+  const selectedFinding = selectedTooth ? teethData[selectedTooth] ?? createEmptyFinding(selectedTooth) : null;
+
+  const updateTooth = (toothNumber: string, patch: Partial<ToothFinding>) => {
+    const current = teethData[toothNumber] ?? createEmptyFinding(toothNumber);
+    setValue(`teeth.${toothNumber}`, {
+      ...current,
+      ...patch,
+      toothNumber,
+      updatedAt: new Date().toISOString(),
+    });
+  };
+
+  const setToothStatus = (toothNumber: string, status: ToothStatus) => {
+    updateTooth(toothNumber, { status, examined: true });
+  };
+
+  const clearTooth = (toothNumber: string) => {
+    setValue(`teeth.${toothNumber}`, createEmptyFinding(toothNumber));
   };
 
   const togglePathology = (idx: number) => {
@@ -49,7 +67,8 @@ export function Step3Charting() {
         </p>
       </div>
 
-      {/* Dental arcade SVG chart */}
+      {/* Dental arcade chart — real anatomical reference for cheek teeth,
+          schematic grid for incisors (no reference photo supplied) */}
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
@@ -64,18 +83,40 @@ export function Step3Charting() {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <DentalArcadeChart teethData={teethData} onToothClick={setSelectedToothId} />
+        <CardContent className="space-y-6">
+          <DentalLegend />
+          {DENTAL_CHART_SIDES.map((side) => (
+            <div key={side.id} className="space-y-1.5">
+              <p className="text-center text-xs font-bold uppercase tracking-widest text-slate-400">
+                {side.label}
+              </p>
+              <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900">
+                <EquineDentalChart
+                  side={side}
+                  exam={{ teeth: teethData, generalNotes: '' }}
+                  selectedTooth={selectedTooth}
+                  onSelectTooth={setSelectedTooth}
+                />
+              </div>
+            </div>
+          ))}
         </CardContent>
       </Card>
 
-      <ToothModal
-        open={selectedToothId !== null}
-        toothId={selectedToothId}
-        record={selectedToothId ? teethData[selectedToothId] : null}
-        onSave={saveTooth}
-        onClose={() => setSelectedToothId(null)}
-      />
+      {selectedFinding && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="max-h-[90vh] w-full max-w-md overflow-hidden rounded-xl bg-white shadow-xl dark:bg-slate-900">
+            <ToothExamPanel
+              key={selectedFinding.toothNumber}
+              finding={selectedFinding}
+              onChange={(patch) => updateTooth(selectedFinding.toothNumber, patch)}
+              onMarkStatus={(status) => setToothStatus(selectedFinding.toothNumber, status)}
+              onClear={() => clearTooth(selectedFinding.toothNumber)}
+              onClose={() => setSelectedTooth(null)}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Pathology toggles */}
       <Card>
