@@ -1,35 +1,19 @@
 'use client';
 
-import { DentalReportData, ToothRecord, ToothStatus, toothType } from '@/lib/types';
-import { DentalArcadeChartStatic } from './dental-chart-svg';
+import { DentalReportData, ToothFinding, toothType } from '@/lib/types';
+import { EquineDentalChart } from '@/components/dental/EquineDentalChart';
+import { DENTAL_CHART_SIDES, getStatusOption, TOOTH_STATUS_OPTIONS } from '@/components/dental/dentalData';
 import { HorseLogoForPDF } from '@/components/logo';
 
 const BRAND_COLOR = '#441752';
 const SECONDARY_COLOR = '#E8E8E8';
-
-const LEGEND: Record<ToothStatus, { fill: string; stroke: string; label: string }> = {
-  normal:    { fill: '#ffffff', stroke: '#94a3b8', label: 'Normal' },
-  attention: { fill: '#fef3c7', stroke: '#f59e0b', label: 'Attention' },
-  pathology: { fill: '#fee2e2', stroke: '#ef4444', label: 'Pathology' },
-  absent:    { fill: '#e2e8f0', stroke: '#64748b', label: 'Absent'   },
-};
 
 // Renders the heading text already uppercased in JS rather than via CSS
 // text-transform + letter-spacing — that combination is what triggers
 // html2canvas's text-doubling ("ghosting") bug at scale:2.
 function SectionTitle({ children }: { children: string }) {
   return (
-    <div
-      style={{
-        fontSize: 12,
-        fontWeight: 700,
-        color: BRAND_COLOR,
-        marginBottom: 6,
-        marginTop: 14,
-        paddingBottom: 3,
-        borderBottom: `0.5px solid ${SECONDARY_COLOR}`,
-      }}
-    >
+    <div style={{ fontSize: 12, fontWeight: 700, color: BRAND_COLOR, marginBottom: 6, marginTop: 14, paddingBottom: 3, borderBottom: `0.5px solid ${SECONDARY_COLOR}` }}>
       {children.toUpperCase()}
     </div>
   );
@@ -50,10 +34,10 @@ function Tag({ label, color = 'brand' }: { label: string; color?: 'brand' | 'amb
   return <span style={{ display: 'inline-block', fontSize: 9, padding: '3px 8px', borderRadius: 4, backgroundColor: c.bg, color: c.text, margin: '2px 3px 2px 0', fontWeight: 600 }}>{label}</span>;
 }
 
-function toothFindingsList(teeth: Record<string, ToothRecord>) {
+function toothFindingsList(teeth: Record<string, ToothFinding>) {
   return Object.values(teeth)
-    .filter((t) => t.status !== 'normal' || t.findings.length > 0 || Boolean(t.note))
-    .sort((a, b) => Number(a.id) - Number(b.id));
+    .filter((t) => t.status !== 'normal' || t.findings.length > 0 || Boolean(t.notes))
+    .sort((a, b) => Number(a.toothNumber) - Number(b.toothNumber));
 }
 
 function BrandLogo() {
@@ -129,21 +113,32 @@ export function ReportPreview({ data }: { data: DentalReportData }) {
       <SectionTitle>Dental Arcade Chart</SectionTitle>
 
       {/* Legend */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 8, marginTop: 6 }}>
-        {(Object.keys(LEGEND) as ToothStatus[]).map((s) => {
-          const c = LEGEND[s];
-          return (
-            <div key={s} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-              <div style={{ width: 12, height: 12, borderRadius: 2, border: `1px solid ${c.stroke}`, backgroundColor: c.fill }} />
-              <span style={{ fontSize: 8, color: '#64748b' }}>{c.label}</span>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginBottom: 8, marginTop: 6 }}>
+        {TOOTH_STATUS_OPTIONS.map((option) => (
+          <div key={option.value} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <div style={{ width: 12, height: 12, borderRadius: 2, border: '1px solid #94a3b8', backgroundColor: '#f8fafc', fontSize: 9, textAlign: 'center', lineHeight: '11px' }}>
+              {option.glyph}
             </div>
-          );
-        })}
+            <span style={{ fontSize: 8, color: '#64748b' }}>{option.label}</span>
+          </div>
+        ))}
       </div>
 
-      {/* SVG arcade charts */}
+      {/* Arcade charts — real anatomical reference for cheek teeth, schematic grid for incisors */}
       <div style={{ border: `0.5px solid ${SECONDARY_COLOR}`, borderRadius: 4, padding: 12, marginBottom: 6 }}>
-        <DentalArcadeChartStatic teethData={data.teeth} />
+        {DENTAL_CHART_SIDES.map((side) => (
+          <div key={side.id} style={{ marginBottom: 10 }}>
+            <div style={{ fontSize: 8, fontWeight: 600, color: '#64748b', marginBottom: 4, textAlign: 'center' }}>
+              {side.label.toUpperCase()}
+            </div>
+            <EquineDentalChart
+              side={side}
+              exam={{ teeth: data.teeth, generalNotes: '' }}
+              selectedTooth={null}
+              onSelectTooth={() => {}}
+            />
+          </div>
+        ))}
       </div>
 
       {/* Tooth-level findings */}
@@ -163,13 +158,13 @@ export function ReportPreview({ data }: { data: DentalReportData }) {
             </thead>
             <tbody>
               {toothFindings.map((t) => (
-                <tr key={t.id} style={{ borderBottom: '0.5px solid #f1f5f9', verticalAlign: 'top' }}>
-                  <td style={{ padding: '4px 6px 4px 0', fontWeight: 700, color: BRAND_COLOR }}>{t.id}</td>
-                  <td style={{ padding: '4px 6px', color: '#64748b' }}>{toothType(t.id)}</td>
-                  <td style={{ padding: '4px 6px', color: '#334155' }}>{LEGEND[t.status].label}</td>
+                <tr key={t.toothNumber} style={{ borderBottom: '0.5px solid #f1f5f9', verticalAlign: 'top' }}>
+                  <td style={{ padding: '4px 6px 4px 0', fontWeight: 700, color: BRAND_COLOR }}>{t.toothNumber}</td>
+                  <td style={{ padding: '4px 6px', color: '#64748b' }}>{toothType(t.toothNumber)}</td>
+                  <td style={{ padding: '4px 6px', color: '#334155' }}>{getStatusOption(t.status).label}</td>
                   <td style={{ padding: '4px 6px', color: '#334155' }}>{t.findings.join(', ') || '—'}</td>
                   <td style={{ padding: '4px 6px', color: '#334155' }}>{t.severity || '—'}</td>
-                  <td style={{ padding: '4px 0 4px 6px', color: '#334155' }}>{t.note || '—'}</td>
+                  <td style={{ padding: '4px 0 4px 6px', color: '#334155' }}>{t.notes || '—'}</td>
                 </tr>
               ))}
             </tbody>

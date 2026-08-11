@@ -1,13 +1,7 @@
-export type ToothStatus = 'normal' | 'attention' | 'pathology' | 'absent';
-export type ToothSeverity = 'Mild' | 'Moderate' | 'Severe' | '';
+import { DentalChartSide, ToothFinding } from '@/components/dental/dentalTypes';
+import { DENTAL_CHART_SIDES, createEmptyFinding } from '@/components/dental/dentalData';
 
-export interface ToothRecord {
-  id: string;
-  status: ToothStatus;
-  findings: string[];
-  severity: ToothSeverity;
-  note: string;
-}
+export type { ToothStatus, ToothSeverity, ToothFinding } from '@/components/dental/dentalTypes';
 
 export interface PathologyFinding {
   id: string;
@@ -57,7 +51,7 @@ export interface DentalReportData {
   sedationDrugs: SedationEntry[];
 
   // Step 3 — Charting
-  teeth: Record<string, ToothRecord>;
+  teeth: Record<string, ToothFinding>;
   pathologies: PathologyFinding[];
   softTissue: SoftTissueFinding[];
   chartingNotes: string;
@@ -123,69 +117,24 @@ export const HORSE_BREEDS = [
   'Standardbred', 'Appaloosa', 'Paint', 'Draft', 'Pony', 'Mixed/Other',
 ] as const;
 
-// Modified Triadan numbering — upper arcades (1xx right, 2xx left)
-// Incisors 01-03, Canine 04, Premolars 06-08, Molar 09-11
-export const UPPER_RIGHT_TEETH = [
-  '101', '102', '103', '104', '106', '107', '108', '109', '110', '111',
-];
-export const UPPER_LEFT_TEETH = [
-  '201', '202', '203', '204', '206', '207', '208', '209', '210', '211',
-];
-export const LOWER_RIGHT_TEETH = [
-  '301', '302', '303', '304', '306', '307', '308', '309', '310', '311',
-];
-export const LOWER_LEFT_TEETH = [
-  '401', '402', '403', '404', '406', '407', '408', '409', '410', '411',
-];
-
-// Findings loggable for an individual tooth via the tooth detail modal.
-// Reference: Floyd MR, "The Modified Triadan System: Nomenclature for
-// Veterinary Dentistry," J Vet Dent 1991;8(4):18-19.
-export const TOOTH_FINDING_OPTIONS = [
-  'Excessive Transverse Ridges (ETR)',
-  'Sharp Enamel Points',
-  'Hook',
-  'Ramp',
-  'Step Mouth',
-  'Wave Mouth',
-  'Periodontal Pocket',
-  'Diastema / Feed Packing',
-  'Fracture',
-  'Missing Tooth',
-] as const;
-
-export const TOOTH_SEVERITY_OPTIONS = ['Mild', 'Moderate', 'Severe'] as const;
-
 export function toothType(toothId: string): string {
   const suffix = toothId.slice(-2);
   if (['01', '02', '03'].includes(suffix)) return 'Incisor';
   if (suffix === '04') return 'Canine';
+  if (suffix === '05') return 'Wolf tooth (P1)';
   if (['06', '07', '08'].includes(suffix)) return 'Premolar';
   if (['09', '10', '11'].includes(suffix)) return 'Molar';
   return 'Tooth';
 }
 
-export const TOOTH_GROUPS = [
-  { label: 'Incisors', ids: ['01', '02', '03'] },
-  { label: 'Canine', ids: ['04'] },
-  { label: 'Premolars', ids: ['06', '07', '08'] },
-  { label: 'Molars', ids: ['09', '10', '11'] },
-];
-
-export function getToothGroup(toothId: string): string {
-  const suffix = toothId.slice(-2);
-  const group = TOOTH_GROUPS.find((g) => g.ids.includes(suffix));
-  return group ? group.label : 'Other';
-}
-
-export function createInitialTeeth(): Record<string, ToothRecord> {
-  const all = [
-    ...UPPER_RIGHT_TEETH, ...UPPER_LEFT_TEETH,
-    ...LOWER_RIGHT_TEETH, ...LOWER_LEFT_TEETH,
-  ];
-  const teeth: Record<string, ToothRecord> = {};
-  for (const id of all) {
-    teeth[id] = { id, status: 'normal', findings: [], severity: '', note: '' };
+/** Every tooth across all charted sides (both real-image cheek-teeth
+ * charts plus the schematic incisor grid), keyed by Triadan number. */
+export function createInitialTeeth(): Record<string, ToothFinding> {
+  const teeth: Record<string, ToothFinding> = {};
+  for (const side of DENTAL_CHART_SIDES as DentalChartSide[]) {
+    for (const region of side.regions) {
+      teeth[region.toothNumber] = createEmptyFinding(region.toothNumber);
+    }
   }
   return teeth;
 }

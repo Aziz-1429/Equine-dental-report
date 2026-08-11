@@ -1,25 +1,32 @@
-import { DentalReportData, ToothRecord, createInitialReport } from './types';
+import { DentalReportData, ToothFinding, createInitialReport } from './types';
 
 const STORAGE_KEY = 'equine-dental-report-draft';
 const SAVED_KEY = 'equine-dental-report-saved-at';
 
-// Fills in fields added to ToothRecord after a draft may have been saved
-// (e.g. findings/severity/note), so old localStorage drafts don't crash
-// components that assume the current shape.
+// Fills in fields ToothFinding has picked up across schema revisions —
+// `note` -> `notes`, `id` -> `toothNumber`, findings as string -> string[],
+// plus the newer `examined`/`severity`/`treatment`/`recommendation`
+// fields — so an old localStorage draft never crashes a component that
+// assumes the current shape.
 function normalizeTeeth(
-  teeth: Record<string, Partial<ToothRecord>> | undefined,
-  fallback: Record<string, ToothRecord>
-): Record<string, ToothRecord> {
+  teeth: Record<string, Record<string, unknown>> | undefined,
+  fallback: Record<string, ToothFinding>
+): Record<string, ToothFinding> {
   if (!teeth) return fallback;
-  const normalized: Record<string, ToothRecord> = {};
-  for (const id of Object.keys(fallback)) {
-    const saved = teeth[id];
-    normalized[id] = {
-      id,
-      status: saved?.status ?? 'normal',
-      findings: saved?.findings ?? [],
-      severity: saved?.severity ?? '',
-      note: saved?.note ?? '',
+  const normalized: Record<string, ToothFinding> = {};
+  for (const toothNumber of Object.keys(fallback)) {
+    const saved = teeth[toothNumber];
+    const findings = saved?.findings;
+    normalized[toothNumber] = {
+      toothNumber,
+      examined: typeof saved?.examined === 'boolean' ? saved.examined : Boolean(saved),
+      status: (saved?.status as ToothFinding['status']) ?? 'normal',
+      findings: Array.isArray(findings) ? findings : [],
+      severity: (saved?.severity as ToothFinding['severity']) ?? '',
+      treatment: (saved?.treatment as string) ?? '',
+      recommendation: (saved?.recommendation as string) ?? '',
+      notes: (saved?.notes as string) ?? (saved?.note as string) ?? '',
+      updatedAt: saved?.updatedAt as string | undefined,
     };
   }
   return normalized;
@@ -35,7 +42,7 @@ export function loadDraft(): DentalReportData {
     return {
       ...base,
       ...parsed,
-      teeth: normalizeTeeth(parsed.teeth, base.teeth),
+      teeth: normalizeTeeth(parsed.teeth as Record<string, Record<string, unknown>> | undefined, base.teeth),
     };
   } catch {
     return createInitialReport();

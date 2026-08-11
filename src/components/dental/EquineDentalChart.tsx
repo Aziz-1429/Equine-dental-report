@@ -20,8 +20,15 @@ interface EquineDentalChartProps {
  * `viewBox` matches the reference image's native pixel size, so every
  * tooth region's coordinates are defined once, in the image's own
  * coordinate space, and scale correctly at any rendered size.
+ *
+ * A side may have no `backgroundSrc` (e.g. incisors, for which no
+ * reference photo was supplied) — in that case the chart falls back to
+ * a plain schematic grid so teeth stay visible and clickable without
+ * anatomy that was never provided.
  */
 export function EquineDentalChart({ side, exam, selectedTooth, onSelectTooth }: EquineDentalChartProps) {
+  const hasBackground = Boolean(side.backgroundSrc);
+
   return (
     <svg
       viewBox={`0 0 ${side.viewBoxWidth} ${side.viewBoxHeight}`}
@@ -29,14 +36,24 @@ export function EquineDentalChart({ side, exam, selectedTooth, onSelectTooth }: 
       role="group"
       aria-label={side.label}
     >
-      <image
-        href={side.backgroundSrc}
-        x={0}
-        y={0}
-        width={side.viewBoxWidth}
-        height={side.viewBoxHeight}
-        preserveAspectRatio="xMidYMid meet"
-      />
+      {hasBackground ? (
+        <image
+          href={side.backgroundSrc}
+          x={0}
+          y={0}
+          width={side.viewBoxWidth}
+          height={side.viewBoxHeight}
+          preserveAspectRatio="xMidYMid meet"
+        />
+      ) : (
+        <rect
+          x={0}
+          y={0}
+          width={side.viewBoxWidth}
+          height={side.viewBoxHeight}
+          className="fill-slate-50"
+        />
+      )}
 
       {side.regions.map((region) => (
         <Tooth
@@ -45,6 +62,7 @@ export function EquineDentalChart({ side, exam, selectedTooth, onSelectTooth }: 
           finding={exam.teeth[region.toothNumber] ?? createEmptyFinding(region.toothNumber)}
           selected={selectedTooth === region.toothNumber}
           onSelect={onSelectTooth}
+          hasBackground={hasBackground}
         />
       ))}
     </svg>

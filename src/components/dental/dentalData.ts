@@ -109,6 +109,26 @@ export function getStatusOption(status: ToothStatus): ToothStatusOption {
 }
 
 /**
+ * Specific findings a tooth can be checked off with, independent of its
+ * overall status. Reference: Floyd MR, "The Modified Triadan System:
+ * Nomenclature for Veterinary Dentistry," J Vet Dent 1991;8(4):18-19.
+ */
+export const TOOTH_FINDING_OPTIONS = [
+  'Excessive Transverse Ridges (ETR)',
+  'Sharp Enamel Points',
+  'Hook',
+  'Ramp',
+  'Step Mouth',
+  'Wave Mouth',
+  'Periodontal Pocket',
+  'Diastema / Feed Packing',
+  'Fracture',
+  'Missing Tooth',
+] as const;
+
+export const TOOTH_SEVERITY_OPTIONS = ['Mild', 'Moderate', 'Severe'] as const;
+
+/**
  * Tooth hit-area geometry for the "104–111 / 404–411" reference chart
  * (public/dental-chart/triadan-104-111-side.png, 1536×1024 — the exact
  * asset supplied, an AI-generated raster wrapped in an SVG <image> tag
@@ -181,6 +201,34 @@ const SIDE_205_211_REGIONS = [
   { toothNumber: '311', points: '818,730 852,722 888,735 908,760 902,810 892,845 868,855 842,848 822,795 815,755', labelX: 860, labelY: 790 },
 ];
 
+/**
+ * Incisors (101–103, 201–203, 301–303, 401–403) have no photographic
+ * reference — neither supplied chart image shows them, both are
+ * cheek-teeth lateral views. Rendered as a plain schematic grid (no
+ * background image) rather than guessing at anatomy that was never
+ * provided, laid out in the standard charting convention: right side
+ * then left side, left-to-right as the practitioner faces the horse.
+ */
+const INCISOR_BOX = { w: 90, h: 110 };
+function incisorRegion(toothNumber: string, col: number, row: 0 | 1): { toothNumber: string; points: string; labelX: number; labelY: number } {
+  const gap = col >= 3 ? 40 : 0; // extra gap at the midline (between quadrants)
+  const x = col * (INCISOR_BOX.w + 10) + gap;
+  const y = row * (INCISOR_BOX.h + 20) + 20;
+  const { w, h } = INCISOR_BOX;
+  return {
+    toothNumber,
+    points: `${x},${y} ${x + w},${y} ${x + w},${y + h} ${x},${y + h}`,
+    labelX: x + w / 2,
+    labelY: y + h / 2,
+  };
+}
+const INCISOR_REGIONS = [
+  incisorRegion('103', 0, 0), incisorRegion('102', 1, 0), incisorRegion('101', 2, 0),
+  incisorRegion('201', 3, 0), incisorRegion('202', 4, 0), incisorRegion('203', 5, 0),
+  incisorRegion('403', 0, 1), incisorRegion('402', 1, 1), incisorRegion('401', 2, 1),
+  incisorRegion('301', 3, 1), incisorRegion('302', 4, 1), incisorRegion('303', 5, 1),
+];
+
 export const DENTAL_CHART_SIDES: DentalChartSide[] = [
   {
     id: '104-111',
@@ -198,6 +246,14 @@ export const DENTAL_CHART_SIDES: DentalChartSide[] = [
     viewBoxHeight: 1024,
     regions: SIDE_205_211_REGIONS,
   },
+  {
+    id: 'incisors',
+    label: 'Incisors — Triadan 101–103 / 201–203 / 301–303 / 401–403',
+    backgroundSrc: '',
+    viewBoxWidth: 650,
+    viewBoxHeight: 280,
+    regions: INCISOR_REGIONS,
+  },
 ];
 
 export function createEmptyFinding(toothNumber: string): ToothFinding {
@@ -205,7 +261,8 @@ export function createEmptyFinding(toothNumber: string): ToothFinding {
     toothNumber,
     examined: false,
     status: 'normal',
-    findings: '',
+    findings: [],
+    severity: '',
     treatment: '',
     recommendation: '',
     notes: '',
