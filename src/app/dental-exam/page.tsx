@@ -13,12 +13,17 @@ import { DentalLegend } from '@/components/dental/DentalLegend';
 import { DENTAL_CHART_SIDES } from '@/components/dental/dentalData';
 import { useDentalExam } from '@/hooks/useDentalExam';
 
-const side = DENTAL_CHART_SIDES[0];
-
 export default function DentalExamPage() {
+  const [sideId, setSideId] = useState(DENTAL_CHART_SIDES[0].id);
+  const side = DENTAL_CHART_SIDES.find((s) => s.id === sideId) ?? DENTAL_CHART_SIDES[0];
   const { exam, updateTooth, setToothStatus, clearTooth, setGeneralNotes, clearAll, hydrated } = useDentalExam(side);
   const [selectedTooth, setSelectedTooth] = useState<string | null>(null);
   const [confirmingClearAll, setConfirmingClearAll] = useState(false);
+
+  const handleSelectSide = (id: string) => {
+    setSideId(id);
+    setSelectedTooth(null);
+  };
 
   const selectedFinding = selectedTooth ? exam.teeth[selectedTooth] : null;
 
@@ -41,7 +46,22 @@ export default function DentalExamPage() {
       <header className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">Equine Dental Examination Chart</h1>
-          <p className="mt-0.5 text-sm text-slate-500">{side.label}</p>
+          <div className="mt-2 flex flex-wrap gap-1.5">
+            {DENTAL_CHART_SIDES.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => handleSelectSide(s.id)}
+                className={`rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                  s.id === side.id
+                    ? 'border-primary bg-primary text-primary-foreground'
+                    : 'border-slate-200 text-slate-500 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800'
+                }`}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
         </div>
       </header>
 
