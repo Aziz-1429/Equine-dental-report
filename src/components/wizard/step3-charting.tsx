@@ -104,8 +104,8 @@ export function Step3Charting() {
       </Card>
 
       {selectedFinding && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="max-h-[90vh] w-full max-w-md overflow-hidden rounded-xl bg-white shadow-xl dark:bg-slate-900">
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 sm:items-center sm:p-4">
+          <div className="flex h-[92vh] w-full flex-col overflow-hidden rounded-t-2xl bg-white shadow-xl dark:bg-slate-900 sm:h-auto sm:max-h-[90vh] sm:max-w-md sm:rounded-xl">
             <ToothExamPanel
               key={selectedFinding.toothNumber}
               finding={selectedFinding}

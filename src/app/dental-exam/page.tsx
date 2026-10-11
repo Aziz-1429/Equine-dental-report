@@ -95,7 +95,7 @@ export default function DentalExamPage() {
           </div>
 
           {/* Exam panel — static column on desktop */}
-          <div className="hidden overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 lg:block">
+          <div className="hidden max-h-[75vh] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 lg:flex">
             {selectedFinding ? (
               <ToothExamPanel
                 key={selectedFinding.toothNumber}
@@ -133,7 +133,7 @@ export default function DentalExamPage() {
             className="absolute inset-0 bg-black/40"
             onClick={() => setSelectedTooth(null)}
           />
-          <div className="absolute inset-x-0 bottom-0 max-h-[85vh] overflow-hidden rounded-t-2xl bg-white shadow-2xl dark:bg-slate-900">
+          <div className="absolute inset-x-0 bottom-0 flex max-h-[85vh] flex-col overflow-hidden rounded-t-2xl bg-white shadow-2xl dark:bg-slate-900">
             <ToothExamPanel
               key={selectedFinding.toothNumber}
               finding={selectedFinding}
