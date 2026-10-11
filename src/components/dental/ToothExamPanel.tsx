@@ -48,7 +48,7 @@ export function ToothExamPanel({ finding, onChange, onMarkStatus, onClear, onClo
   };
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full min-h-0 flex-1 flex-col">
       <div className="flex items-center justify-between border-b border-slate-200 p-4 dark:border-slate-800">
         <div>
           <h3 className="text-lg font-bold text-slate-900 dark:text-white">Tooth {finding.toothNumber}</h3>

@@ -50,6 +50,7 @@ export function Step5Finalize({ dbId }: { dbId?: string | null }) {
       }
       const html2canvas = (await import('html2canvas')).default;
       const jsPDF = (await import('jspdf')).default;
+      const { renderDentalChartPage } = await import('@/lib/pdfDentalChart');
 
       const element = document.getElementById('pdf-report-content');
       if (!element) return;
@@ -67,20 +68,31 @@ export function Step5Finalize({ dbId }: { dbId?: string | null }) {
       const imgWidth = pdfWidth;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
-      if (imgHeight <= pdfHeight) {
+      // A small tolerance absorbs sub-millimeter rounding from the
+      // px->mm conversion above — without it, content landing a
+      // fraction of a mm over one page height triggers a second page
+      // that's almost entirely blank.
+      const PAGE_OVERFLOW_TOLERANCE_MM = 2;
+
+      if (imgHeight <= pdfHeight + PAGE_OVERFLOW_TOLERANCE_MM) {
         pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
       } else {
         let heightLeft = imgHeight;
         let position = 0;
         pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
         heightLeft -= pdfHeight;
-        while (heightLeft > 0) {
+        while (heightLeft > PAGE_OVERFLOW_TOLERANCE_MM) {
           position -= pdfHeight;
           pdf.addPage();
           pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
           heightLeft -= pdfHeight;
         }
       }
+
+      // The dental arcade chart is drawn directly with jsPDF's own vector
+      // primitives (real embedded images + stroked outlines) on its own
+      // page, rather than captured from the DOM — see lib/pdfDentalChart.ts.
+      await renderDentalChartPage(pdf, formData);
 
       const safeName = formData.horseName.replace(/[^a-zA-Z0-9]/g, '_') || 'horse';
       pdf.save(`dental_report_${safeName}_${formData.examDate}.pdf`);
@@ -124,7 +136,7 @@ export function Step5Finalize({ dbId }: { dbId?: string | null }) {
             <SummaryField label="Age" value={formData.age} />
             <SummaryField label="Sex" value={formData.sex} />
             <SummaryField label="BCS" value={formData.bodyConditionScore} />
-            <SummaryField label="Use" value={formData.horseUse} />
+            <SummaryField label="Color" value={formData.color} />
           </div>
 
           <Separator />

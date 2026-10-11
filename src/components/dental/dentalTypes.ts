@@ -28,10 +28,15 @@ export interface ToothStatusOption {
   /** Short glyph/symbol shown on the chart as a non-color indicator
    * (accessibility: distinguishable without relying on hue alone). */
   glyph: string;
-  /** Tailwind classes for the tooth fill when this status is active. */
-  fillClassName: string;
+  /** Tailwind class for the tooth's outline stroke when this status is
+   * active — outline only, never a fill, so the underlying anatomical
+   * artwork stays fully visible. */
+  strokeClassName: string;
   /** Tailwind classes for the legend swatch / badge. */
   swatchClassName: string;
+  /** Same color as a hex string, for the PDF's direct vector drawing
+   * (jsPDF draws its own lines — it can't read Tailwind classes). */
+  hex: string;
 }
 
 export type ToothSeverity = 'Mild' | 'Moderate' | 'Severe' | '';

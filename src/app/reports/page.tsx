@@ -14,7 +14,7 @@ import { Logo } from '@/components/logo';
 import {
   Card, CardContent,
 } from '@/components/ui/card';
-import { fetchReports, deleteReport, SavedReport } from '@/lib/supabase';
+import { fetchReports, deleteReport, isSupabaseConfigured, SavedReport } from '@/lib/supabase';
 
 export default function ReportsPage() {
   const router = useRouter();
@@ -24,6 +24,13 @@ export default function ReportsPage() {
   const [search, setSearch] = useState('');
 
   const load = useCallback(async () => {
+    if (!isSupabaseConfigured) {
+      // Cloud sync isn't set up for this deployment — there's nothing to
+      // retry, so skip straight to the "not configured" empty state
+      // instead of showing a misleading connection error.
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -138,8 +145,27 @@ export default function ReportsPage() {
           </div>
         )}
 
+        {/* Cloud sync not configured — distinct from "no reports yet" */}
+        {!loading && !error && !isSupabaseConfigured && (
+          <Card className="border-dashed">
+            <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+              <AlertCircle className="mb-3 h-12 w-12 text-slate-300 dark:text-slate-700" />
+              <h3 className="text-lg font-semibold text-slate-700 dark:text-slate-300">
+                Cloud reports aren&apos;t set up yet
+              </h3>
+              <p className="mt-1 max-w-sm text-sm text-slate-500">
+                This deployment doesn&apos;t have a database connected, so reports can&apos;t
+                be listed here. Your in-progress report is still saved locally on this device.
+              </p>
+              <Button onClick={() => router.push('/')} className="mt-4" size="lg">
+                <Plus className="mr-2 h-5 w-5" /> Continue Local Report
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Empty */}
-        {!loading && !error && filtered.length === 0 && (
+        {!loading && !error && isSupabaseConfigured && filtered.length === 0 && (
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-16 text-center">
               <FileText className="mb-3 h-12 w-12 text-slate-300 dark:text-slate-700" />
