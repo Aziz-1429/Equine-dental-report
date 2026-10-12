@@ -14,7 +14,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { TOOTH_STATUS_OPTIONS, TOOTH_FINDING_OPTIONS, TOOTH_SEVERITY_OPTIONS } from './dentalData';
+import { TOOTH_STATUS_OPTIONS, TOOTH_FINDING_OPTIONS, TOOTH_SEVERITY_OPTIONS, isWolfTooth } from './dentalData';
 import { ToothFinding, ToothStatus, ToothSeverity } from './dentalTypes';
 
 interface ToothExamPanelProps {
@@ -68,6 +68,75 @@ export function ToothExamPanel({ finding, onChange, onMarkStatus, onClear, onClo
       </div>
 
       <div className="flex-1 space-y-4 overflow-y-auto p-4">
+        {isWolfTooth(finding.toothNumber) && (
+          <div className="space-y-2 rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-900 dark:bg-amber-950/40">
+            <Label className="text-xs font-semibold text-amber-800 dark:text-amber-300">
+              Wolf Tooth — Quick Mark
+            </Label>
+            <p className="text-[11px] leading-snug text-amber-700/80 dark:text-amber-400/80">
+              Not every horse has this tooth. Flag whether it&apos;s present, and if so, whether it was extracted.
+            </p>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() =>
+                  onChange({ status: finding.status === 'missing' ? 'normal' : finding.status, examined: true })
+                }
+                className={cn(
+                  'flex-1 rounded-md border px-2.5 py-1.5 text-xs font-semibold transition-colors',
+                  finding.status !== 'missing'
+                    ? 'border-transparent bg-emerald-600 text-white'
+                    : 'border-slate-300 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400'
+                )}
+              >
+                Present
+              </button>
+              <button
+                type="button"
+                onClick={() => onChange({ status: 'missing', examined: true })}
+                className={cn(
+                  'flex-1 rounded-md border px-2.5 py-1.5 text-xs font-semibold transition-colors',
+                  finding.status === 'missing'
+                    ? 'border-transparent bg-slate-600 text-white'
+                    : 'border-slate-300 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400'
+                )}
+              >
+                Not Present
+              </button>
+            </div>
+            {finding.status !== 'missing' && (
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() =>
+                    onChange({ status: finding.status === 'extracted' ? 'normal' : finding.status, examined: true })
+                  }
+                  className={cn(
+                    'flex-1 rounded-md border px-2.5 py-1.5 text-xs font-semibold transition-colors',
+                    finding.status !== 'extracted'
+                      ? 'border-transparent bg-sky-600 text-white'
+                      : 'border-slate-300 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400'
+                  )}
+                >
+                  Intact
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onChange({ status: 'extracted', examined: true })}
+                  className={cn(
+                    'flex-1 rounded-md border px-2.5 py-1.5 text-xs font-semibold transition-colors',
+                    finding.status === 'extracted'
+                      ? 'border-transparent bg-orange-600 text-white'
+                      : 'border-slate-300 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400'
+                  )}
+                >
+                  Extracted
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="space-y-1.5">
           <Label className="text-xs font-semibold">Status</Label>
           <Select value={finding.status} onValueChange={(v) => onChange({ status: v as ToothStatus, examined: true })}>

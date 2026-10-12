@@ -43,7 +43,7 @@ export default function DentalExamPage() {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-      <header className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+      <header className="border-b border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="mx-auto max-w-7xl px-4 py-4 sm:px-6">
           <h1 className="text-xl font-bold text-slate-900 dark:text-white">Equine Dental Examination Chart</h1>
           <div className="mt-2 flex flex-wrap gap-1.5">

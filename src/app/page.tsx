@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm, FormProvider } from 'react-hook-form';
 import {
   User, Heart, Bone, Stethoscope, FileCheck, Check,
-  ChevronLeft, ChevronRight, Save, RotateCcw, WifiOff, Cloud, List,
+  ChevronLeft, ChevronRight, Save, RotateCcw, WifiOff, Cloud, List, Loader2,
 } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
@@ -156,17 +156,13 @@ function HomeInner() {
   const progress = ((currentStep + 1) / STEPS.length) * 100;
 
   if (!mounted) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background">
-        <div className="text-muted-foreground">Loading...</div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (
     <FormProvider {...methods}>
       <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
-        <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-950/95">
+        <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur-sm dark:border-slate-800 dark:bg-slate-950/95">
           <div className="mx-auto max-w-5xl px-4 py-3 sm:px-6">
             <div className="flex items-center justify-between gap-3">
               <Logo />
@@ -282,15 +278,21 @@ function HomeInner() {
   );
 }
 
+function LoadingScreen() {
+  return (
+    <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-background">
+      <Logo size="lg" />
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        Loading your report...
+      </div>
+    </div>
+  );
+}
+
 export default function Home() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex min-h-screen items-center justify-center bg-background">
-          <div className="text-muted-foreground">Loading...</div>
-        </div>
-      }
-    >
+    <Suspense fallback={<LoadingScreen />}>
       <HomeInner />
     </Suspense>
   );
