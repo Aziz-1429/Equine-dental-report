@@ -268,6 +268,18 @@ export const DENTAL_CHART_SIDES: DentalChartSide[] = [
   },
 ];
 
+/**
+ * Wolf teeth (first premolars) are naturally absent in a large share of
+ * horses — charting needs a fast way to flag "never had one" versus
+ * "had one, removed this exam" without digging through the full status
+ * list. See ToothExamPanel's quick-mark block.
+ */
+export const WOLF_TOOTH_NUMBERS = ['105', '205', '305', '405'] as const;
+
+export function isWolfTooth(toothNumber: string): boolean {
+  return (WOLF_TOOTH_NUMBERS as readonly string[]).includes(toothNumber);
+}
+
 export function createEmptyFinding(toothNumber: string): ToothFinding {
   return {
     toothNumber,
