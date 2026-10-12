@@ -85,7 +85,7 @@ export default function ReportsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
-      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur-sm dark:border-slate-800 dark:bg-slate-950/95">
+      <header className="sticky top-0 z-50 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur-sm dark:border-slate-800 dark:bg-slate-950/95">
         <div className="mx-auto max-w-5xl px-4 py-3 sm:px-6">
           <div className="flex items-center justify-between gap-3">
             <Logo />
