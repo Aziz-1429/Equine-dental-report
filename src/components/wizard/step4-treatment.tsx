@@ -1,7 +1,7 @@
 'use client';
 
 import { useFormContext } from 'react-hook-form';
-import { Stethoscope, Salad, CalendarClock, NotebookPen } from 'lucide-react';
+import { Stethoscope, CalendarClock, ClipboardList } from 'lucide-react';
 
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -89,28 +89,6 @@ export function Step4Treatment() {
         </CardContent>
       </Card>
 
-      {/* Diet recommendations */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-primary">
-              <Salad className="h-4 w-4" />
-            </div>
-            <div>
-              <CardTitle className="text-lg">Diet Recommendations</CardTitle>
-              <CardDescription>Feed adjustments based on dental findings</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Textarea
-            placeholder="e.g. Transition to soaked hay pellets due to reduced grinding surface..."
-            className="min-h-[100px] text-base"
-            {...register('dietRecommendations')}
-          />
-        </CardContent>
-      </Card>
-
       {/* Follow-up timeline */}
       <Card>
         <CardHeader>
@@ -143,22 +121,22 @@ export function Step4Treatment() {
         </CardContent>
       </Card>
 
-      {/* Additional notes */}
+      {/* Instructions & recommendations */}
       <Card>
         <CardHeader>
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-primary">
-              <NotebookPen className="h-4 w-4" />
+              <ClipboardList className="h-4 w-4" />
             </div>
             <div>
-              <CardTitle className="text-lg">Additional Notes</CardTitle>
+              <CardTitle className="text-lg">Instructions &amp; Recommendations</CardTitle>
               <CardDescription>Anything else the client should know</CardDescription>
             </div>
           </div>
         </CardHeader>
         <CardContent>
           <Textarea
-            placeholder="e.g. Recommend re-check of EOTRH progression at next visit..."
+            placeholder="e.g. Transition to soaked hay pellets due to reduced grinding surface. Recommend re-check of EOTRH progression at next visit..."
             className="min-h-[100px] text-base"
             {...register('additionalNotes')}
           />

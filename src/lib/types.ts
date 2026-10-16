@@ -35,6 +35,7 @@ export interface SedationEntry {
 export type LateralExcursion = 'Smooth' | 'Step' | 'Mouth opens to slide' | '';
 export type RostrocaudalExcursion = 'Normal' | 'Reduced' | 'Painful' | '';
 export type TableAngle = 'Normal' | 'Flat' | 'Steep' | 'Excessive' | '';
+export type TmjPainLevel = 'None' | 'Mild' | 'Moderate' | 'Severe' | '';
 
 export interface ExcursionAssessment {
   excursion: LateralExcursion;
@@ -59,8 +60,8 @@ export interface ExamMeasurements {
   molarAngleFarside: TableAngleAssessment;
   incisorAngle: TableAngleAssessment;
   molarAngleNearside: TableAngleAssessment;
-  tmjPainFarside: string;
-  tmjPainNearside: string;
+  tmjPainFarside: TmjPainLevel;
+  tmjPainNearside: TmjPainLevel;
 }
 
 export interface DentalReportData {
@@ -91,7 +92,6 @@ export interface DentalReportData {
 
   // Step 4 — Treatment
   treatments: TreatmentPerformed[];
-  dietRecommendations: string;
   followUpTimeline: string;
   additionalNotes: string;
 
@@ -147,6 +147,7 @@ export const SEX_OPTIONS = ['Stallion', 'Gelding', 'Mare', 'Colt', 'Filly'] as c
 export const LATERAL_EXCURSION_OPTIONS: LateralExcursion[] = ['Smooth', 'Step', 'Mouth opens to slide'];
 export const ROSTROCAUDAL_EXCURSION_OPTIONS: RostrocaudalExcursion[] = ['Normal', 'Reduced', 'Painful'];
 export const TABLE_ANGLE_OPTIONS: TableAngle[] = ['Normal', 'Flat', 'Steep', 'Excessive'];
+export const TMJ_PAIN_OPTIONS: TmjPainLevel[] = ['None', 'Mild', 'Moderate', 'Severe'];
 
 export const HORSE_BREEDS = [
   'Thoroughbred', 'Arabian', 'Quarter Horse', 'Warmblood',
@@ -241,7 +242,6 @@ export function createInitialReport(): DentalReportData {
     chartingNotes: '',
     examMeasurements: createInitialExamMeasurements(),
     treatments: createInitialTreatments(),
-    dietRecommendations: '',
     followUpTimeline: '6 months',
     additionalNotes: '',
     practitionerName: '',
