@@ -244,6 +244,83 @@ const INCISOR_REGIONS = [
   incisorRegion('301', 3, 1), incisorRegion('302', 4, 1), incisorRegion('303', 5, 1),
 ];
 
+/** X position of the midline divider between the right and left
+ * incisor quadrants, matching the clinic's printed exam form. */
+export const INCISOR_MIDLINE_X = 3 * (INCISOR_BOX.w + 10) + 20;
+
+/** True for upper-arcade incisors (101-103/201-203), whose gumline is
+ * at the top of their box; false for lower-arcade ones (301-303/401-403),
+ * whose gumline is at the bottom — the reference exam form draws each
+ * row as a proper tooth silhouette (flat at the gum, a gentle rounded
+ * point at the biting edge) rather than a plain box. */
+export function isUpperIncisor(toothNumber: string): boolean {
+  return toothNumber[0] === '1' || toothNumber[0] === '2';
+}
+
+interface ToothDomeGeometry {
+  corner1: [number, number];
+  corner2: [number, number];
+  curveStart: [number, number];
+  curveEnd: [number, number];
+  controlPoint: [number, number];
+}
+
+function toothDomeGeometry(points: string, upper: boolean): ToothDomeGeometry {
+  const coords = points
+    .trim()
+    .split(/\s+/)
+    .map((p) => p.split(',').map(Number));
+  const xs = coords.map((c) => c[0]);
+  const ys = coords.map((c) => c[1]);
+  const x0 = Math.min(...xs);
+  const x1 = Math.max(...xs);
+  const y0 = Math.min(...ys);
+  const y1 = Math.max(...ys);
+  const w = x1 - x0;
+  const h = y1 - y0;
+  const taper = w * 0.18;
+  const midX = x0 + w / 2;
+
+  return upper
+    ? {
+        corner1: [x0, y0],
+        corner2: [x1, y0],
+        curveStart: [x1 - taper, y0 + h * 0.78],
+        curveEnd: [x0 + taper, y0 + h * 0.78],
+        controlPoint: [midX, y1 + h * 0.08],
+      }
+    : {
+        corner1: [x0, y1],
+        corner2: [x1, y1],
+        curveStart: [x1 - taper, y0 + h * 0.22],
+        curveEnd: [x0 + taper, y0 + h * 0.22],
+        controlPoint: [midX, y0 - h * 0.08],
+      };
+}
+
+/** Builds a simple tooth-crown silhouette (flat gumline, gently rounded
+ * biting edge) from a region's rectangular bounding box, so the
+ * schematic incisor grid reads as actual teeth instead of plain boxes. */
+export function toothDomePath(points: string, upper: boolean): string {
+  const { corner1, corner2, curveStart, curveEnd, controlPoint } = toothDomeGeometry(points, upper);
+  return `M ${corner1[0]},${corner1[1]} L ${corner2[0]},${corner2[1]} L ${curveStart[0]},${curveStart[1]} Q ${controlPoint[0]},${controlPoint[1]} ${curveEnd[0]},${curveEnd[1]} Z`;
+}
+
+/** Same tooth-crown silhouette as `toothDomePath`, but as a sampled
+ * point list — for consumers (like the PDF's jsPDF vector drawing)
+ * that can't render an SVG quadratic-curve path string directly. */
+export function toothDomePoints(points: string, upper: boolean, curveSteps = 8): [number, number][] {
+  const { corner1, corner2, curveStart, curveEnd, controlPoint } = toothDomeGeometry(points, upper);
+  const curvePoints: [number, number][] = [];
+  for (let i = 0; i <= curveSteps; i++) {
+    const t = i / curveSteps;
+    const x = (1 - t) ** 2 * curveStart[0] + 2 * (1 - t) * t * controlPoint[0] + t ** 2 * curveEnd[0];
+    const y = (1 - t) ** 2 * curveStart[1] + 2 * (1 - t) * t * controlPoint[1] + t ** 2 * curveEnd[1];
+    curvePoints.push([x, y]);
+  }
+  return [corner1, corner2, ...curvePoints];
+}
+
 export const DENTAL_CHART_SIDES: DentalChartSide[] = [
   {
     id: '104-111',

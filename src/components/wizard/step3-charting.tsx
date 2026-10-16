@@ -18,6 +18,7 @@ import { EquineDentalChart } from '@/components/dental/EquineDentalChart';
 import { ToothExamPanel } from '@/components/dental/ToothExamPanel';
 import { DentalLegend } from '@/components/dental/DentalLegend';
 import { DENTAL_CHART_SIDES, createEmptyFinding } from '@/components/dental/dentalData';
+import { ExamMeasurementsSection } from './exam-measurements';
 
 export function Step3Charting() {
   const { watch, setValue, register } = useFormContext<DentalReportData>();
@@ -117,6 +118,8 @@ export function Step3Charting() {
           </div>
         </div>
       )}
+
+      <ExamMeasurementsSection />
 
       {/* Pathology toggles */}
       <Card>

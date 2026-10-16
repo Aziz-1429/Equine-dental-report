@@ -1,7 +1,7 @@
 'use client';
 
 import { DentalChartSide, DentalExam } from './dentalTypes';
-import { createEmptyFinding } from './dentalData';
+import { createEmptyFinding, INCISOR_MIDLINE_X } from './dentalData';
 import { Tooth } from './Tooth';
 
 interface EquineDentalChartProps {
@@ -46,13 +46,26 @@ export function EquineDentalChart({ side, exam, selectedTooth, onSelectTooth }: 
           preserveAspectRatio="xMidYMid meet"
         />
       ) : (
-        <rect
-          x={0}
-          y={0}
-          width={side.viewBoxWidth}
-          height={side.viewBoxHeight}
-          className="fill-slate-50"
-        />
+        <>
+          <rect
+            x={0}
+            y={0}
+            width={side.viewBoxWidth}
+            height={side.viewBoxHeight}
+            className="fill-slate-50"
+          />
+          {/* Midline between the right and left incisor quadrants,
+              matching the clinic's printed exam form. */}
+          <line
+            x1={INCISOR_MIDLINE_X}
+            y1={0}
+            x2={INCISOR_MIDLINE_X}
+            y2={side.viewBoxHeight}
+            className="stroke-red-500"
+            strokeWidth={2}
+            vectorEffect="non-scaling-stroke"
+          />
+        </>
       )}
 
       {side.regions.map((region) => (
