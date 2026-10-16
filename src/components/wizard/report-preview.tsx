@@ -32,7 +32,7 @@ function LetterheadHeader() {
   return (
     <div style={{ position: 'relative', height: 110, backgroundColor: SECONDARY_COLOR, overflow: 'hidden' }}>
       <svg width="794" height="110" viewBox="0 0 794 110" style={{ position: 'absolute', top: 0, left: 0 }}>
-        <polygon points="0,0 470,0 390,110 0,110" fill={BRAND_COLOR} />
+        <polygon points="0,0 340,0 280,110 0,110" fill={BRAND_COLOR} />
       </svg>
       <div style={{ position: 'absolute', left: 28, top: 0, height: '100%', display: 'flex', alignItems: 'center', gap: 10 }}>
         <HorseLogoForPDF size={42} color="#ffffff" />
@@ -41,7 +41,10 @@ function LetterheadHeader() {
           <div>Dentum</div>
         </div>
       </div>
-      <div style={{ position: 'absolute', left: 500, top: 22, color: BRAND_COLOR }}>
+      {/* Same vertical-centering technique as the logo block above, so
+          both halves land on the same level regardless of how many
+          lines of contact info there are. */}
+      <div style={{ position: 'absolute', left: 365, top: 0, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', color: BRAND_COLOR }}>
         <div style={{ fontSize: 17, fontWeight: 700, marginBottom: 3 }}>EquiDentum</div>
         <div style={{ fontSize: 9, fontWeight: 700 }}>{CLINIC_ADDRESS}</div>
         <div style={{ fontSize: 9, fontWeight: 700 }}>{CLINIC_PHONE}</div>
@@ -67,7 +70,21 @@ function TitleBanner({ title }: { title: string }) {
 function FieldBox({ label, value }: { label: string; value: string }) {
   return (
     <div style={{ width: '48%', display: 'flex', alignItems: 'center', marginBottom: 8 }}>
-      <div style={{ backgroundColor: BRAND_COLOR, color: '#ffffff', fontWeight: 700, fontSize: 9, padding: '4px 9px', borderRadius: 3, whiteSpace: 'nowrap' }}>
+      <div
+        style={{
+          backgroundColor: BRAND_COLOR,
+          color: '#ffffff',
+          fontWeight: 700,
+          fontSize: 9,
+          lineHeight: 1,
+          padding: '8px 9px',
+          borderRadius: 3,
+          whiteSpace: 'nowrap',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
         {label}
       </div>
       <div style={{ marginLeft: 8, fontSize: 11, color: value ? '#1e293b' : '#cbd5e1', fontWeight: 500, fontStyle: value ? 'normal' : 'italic' }}>
