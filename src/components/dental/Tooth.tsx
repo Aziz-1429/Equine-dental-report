@@ -94,7 +94,7 @@ export function Tooth({ region, finding, selected, onSelect, hasBackground }: To
                 ? 'stroke-primary drop-shadow-[0_0_4px_rgba(68,23,82,0.6)]'
                 : status.strokeClassName
             }
-            strokeWidth={selected ? 5 : 3}
+            strokeWidth={selected ? 4 : 2}
             strokeDasharray={!selected && isBroken ? '10 6' : undefined}
             vectorEffect="non-scaling-stroke"
           />
@@ -107,7 +107,7 @@ export function Tooth({ region, finding, selected, onSelect, hasBackground }: To
                 ? 'stroke-primary drop-shadow-[0_0_4px_rgba(68,23,82,0.6)]'
                 : status.strokeClassName
             }
-            strokeWidth={selected ? 5 : 3}
+            strokeWidth={selected ? 4 : 2}
             strokeDasharray={!selected && isBroken ? '10 6' : undefined}
             vectorEffect="non-scaling-stroke"
           />

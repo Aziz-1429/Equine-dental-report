@@ -7,6 +7,49 @@ import { HorseLogoForPDF } from '@/components/logo';
 const BRAND_COLOR = '#441752';
 const SECONDARY_COLOR = '#E8E8E8';
 
+// html2canvas cannot reliably vertically-center plain HTML text inside a
+// fixed-height box — every CSS technique (line-height, padding, flexbox,
+// table-cell) ends up rendering the text hugging the BOTTOM of the box
+// in the actual rasterized output, even though it looks centered in a
+// live browser. Rendering the badge as inline SVG with a <text> element
+// using dominant-baseline="central" sidesteps the whole problem: SVG
+// text is positioned directly by its own coordinates, not by CSS line
+// boxes, so html2canvas (which defers to the browser's native SVG
+// rendering) draws it exactly where specified.
+let measureCanvas: HTMLCanvasElement | null = null;
+function measureLabelWidth(label: string, weight = 700, size = 9): number {
+  if (typeof document === 'undefined') return label.length * size * 0.65;
+  if (!measureCanvas) measureCanvas = document.createElement('canvas');
+  const ctx = measureCanvas.getContext('2d');
+  if (!ctx) return label.length * size * 0.65;
+  ctx.font = `${weight} ${size}px Helvetica, Arial, sans-serif`;
+  return ctx.measureText(label).width;
+}
+
+const BADGE_HEIGHT = 24;
+const BADGE_PADDING_X = 9;
+
+function Badge({ label }: { label: string }) {
+  const width = Math.ceil(measureLabelWidth(label)) + BADGE_PADDING_X * 2;
+  return (
+    <svg width={width} height={BADGE_HEIGHT} style={{ flexShrink: 0 }}>
+      <rect width={width} height={BADGE_HEIGHT} rx={3} fill={BRAND_COLOR} />
+      <text
+        x={width / 2}
+        y={BADGE_HEIGHT / 2}
+        textAnchor="middle"
+        dominantBaseline="central"
+        fill="#ffffff"
+        fontWeight={700}
+        fontSize={9}
+        fontFamily="Helvetica, Arial, sans-serif"
+      >
+        {label}
+      </text>
+    </svg>
+  );
+}
+
 // The clinic's own letterhead contact details — easy to update in one
 // place if the practice's address/phone/email ever changes.
 const CLINIC_ADDRESS = 'Riyadh, Saudi Arabia';
@@ -67,48 +110,45 @@ function TitleBanner({ title }: { title: string }) {
   );
 }
 
-// A fixed box height paired with a line-height of the SAME value is the
-// one centering technique that survives html2canvas rasterization
-// reliably — flex alignItems/justifyContent on the badge was confirmed
-// to drift off-center in the actual downloaded PDF even though it
-// looked correct in a live browser preview.
-const FIELD_BOX_HEIGHT = 24;
+// Truncates to a max rendered width (measured, not guessed), appending an
+// ellipsis — needed because the value is drawn as SVG text (see Badge's
+// comment on why), which has no native text-overflow support.
+function truncateToWidth(text: string, maxWidth: number, weight: number, size: number): string {
+  if (measureLabelWidth(text, weight, size) <= maxWidth) return text;
+  let lo = 0;
+  let hi = text.length;
+  while (lo < hi) {
+    const mid = Math.ceil((lo + hi) / 2);
+    const candidate = `${text.slice(0, mid)}…`;
+    if (measureLabelWidth(candidate, weight, size) <= maxWidth) lo = mid;
+    else hi = mid - 1;
+  }
+  return lo === 0 ? '…' : `${text.slice(0, lo)}…`;
+}
+
+const VALUE_MAX_WIDTH = 280;
 
 function FieldBox({ label, value }: { label: string; value: string }) {
+  const weight = value ? 500 : 400;
+  const display = truncateToWidth(value || '—', VALUE_MAX_WIDTH, weight, 11);
+  const width = Math.ceil(measureLabelWidth(display, weight, 11)) + 8;
   return (
-    <div style={{ width: '48%', display: 'flex', marginBottom: 8, height: FIELD_BOX_HEIGHT }}>
-      <div
-        style={{
-          backgroundColor: BRAND_COLOR,
-          color: '#ffffff',
-          fontWeight: 700,
-          fontSize: 9,
-          height: FIELD_BOX_HEIGHT,
-          lineHeight: `${FIELD_BOX_HEIGHT}px`,
-          padding: '0 9px',
-          borderRadius: 3,
-          whiteSpace: 'nowrap',
-          textAlign: 'center',
-        }}
-      >
-        {label}
-      </div>
-      <div
-        style={{
-          marginLeft: 8,
-          fontSize: 11,
-          height: FIELD_BOX_HEIGHT,
-          lineHeight: `${FIELD_BOX_HEIGHT}px`,
-          color: value ? '#1e293b' : '#cbd5e1',
-          fontWeight: 500,
-          fontStyle: value ? 'normal' : 'italic',
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-        }}
-      >
-        {value || '—'}
-      </div>
+    <div style={{ width: '48%', display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+      <Badge label={label} />
+      <svg width={width} height={BADGE_HEIGHT} style={{ marginLeft: 8, flexShrink: 0, overflow: 'visible' }}>
+        <text
+          x={0}
+          y={BADGE_HEIGHT / 2}
+          dominantBaseline="central"
+          fill={value ? '#1e293b' : '#cbd5e1'}
+          fontWeight={weight}
+          fontStyle={value ? 'normal' : 'italic'}
+          fontSize={11}
+          fontFamily="Helvetica, Arial, sans-serif"
+        >
+          {display}
+        </text>
+      </svg>
     </div>
   );
 }
@@ -194,14 +234,15 @@ function ExamMeasurementsBlock({ data }: { data: DentalReportData }) {
         </tbody>
       </table>
 
-      <div style={{ display: 'flex', gap: 10 }}>
-        <div style={{ width: '50%', border: `0.5px solid ${SECONDARY_COLOR}`, borderRadius: 4 }}>
-          <div style={{ backgroundColor: '#fafafa', padding: '4px 8px', fontWeight: 700, fontSize: 9, color: BRAND_COLOR }}>TMJ PAIN SCALE — RIGHT</div>
-          <div style={{ padding: 8, fontSize: 10, color: '#334155', minHeight: 20 }}>{m.tmjPainFarside || '—'}</div>
-        </div>
-        <div style={{ width: '50%', border: `0.5px solid ${SECONDARY_COLOR}`, borderRadius: 4 }}>
-          <div style={{ backgroundColor: '#fafafa', padding: '4px 8px', fontWeight: 700, fontSize: 9, color: BRAND_COLOR }}>TMJ PAIN SCALE — LEFT</div>
-          <div style={{ padding: 8, fontSize: 10, color: '#334155', minHeight: 20 }}>{m.tmjPainNearside || '—'}</div>
+      <div style={{ border: `0.5px solid ${SECONDARY_COLOR}`, borderRadius: 4 }}>
+        <div style={{ backgroundColor: '#fafafa', padding: '4px 8px', fontWeight: 700, fontSize: 9, color: BRAND_COLOR }}>TMJ PAIN SCALE</div>
+        <div style={{ display: 'flex' }}>
+          <div style={{ width: '50%', padding: 8 }}>
+            <PillRow label="Right" value={m.tmjPainFarside} />
+          </div>
+          <div style={{ width: '50%', padding: 8 }}>
+            <PillRow label="Left" value={m.tmjPainNearside} />
+          </div>
         </div>
       </div>
     </>
@@ -211,7 +252,25 @@ function ExamMeasurementsBlock({ data }: { data: DentalReportData }) {
 function Tag({ label, color = 'brand' }: { label: string; color?: 'brand' | 'amber' | 'green' }) {
   const colors = { brand: { bg: '#f3e8f7', text: BRAND_COLOR }, amber: { bg: '#fef3c7', text: '#92400e' }, green: { bg: '#dcfce7', text: '#166534' } };
   const c = colors[color];
-  return <span style={{ display: 'inline-block', fontSize: 9, padding: '3px 8px', borderRadius: 4, backgroundColor: c.bg, color: c.text, margin: '2px 3px 2px 0', fontWeight: 600 }}>{label}</span>;
+  const height = 17;
+  const width = Math.ceil(measureLabelWidth(label, 600)) + 16;
+  return (
+    <svg width={width} height={height} style={{ margin: '2px 3px 2px 0', verticalAlign: 'middle' }}>
+      <rect width={width} height={height} rx={4} fill={c.bg} />
+      <text
+        x={width / 2}
+        y={height / 2}
+        textAnchor="middle"
+        dominantBaseline="central"
+        fill={c.text}
+        fontWeight={600}
+        fontSize={9}
+        fontFamily="Helvetica, Arial, sans-serif"
+      >
+        {label}
+      </text>
+    </svg>
+  );
 }
 
 function toothFindingsList(teeth: Record<string, ToothFinding>) {
@@ -369,12 +428,14 @@ export function ReportPreview({ data }: { data: DentalReportData }) {
       {/* Recommendations */}
       <div data-pdf-section style={{ ...sectionStyle, paddingBottom: 40 }}>
         <SectionTitle>Recommendations</SectionTitle>
-        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap' }}>
           <FieldBox label="Follow-Up Timeline" value={data.followUpTimeline} />
-          <FieldBox label="Diet Recommendations" value={data.dietRecommendations} />
         </div>
         {data.additionalNotes && (
-          <div style={{ border: `0.5px solid ${SECONDARY_COLOR}`, borderRadius: 4, padding: 10, backgroundColor: '#fafafa', fontSize: 10, color: '#334155', lineHeight: 1.5, marginTop: 6 }}>{data.additionalNotes}</div>
+          <>
+            <div style={{ fontSize: 10, fontWeight: 700, color: BRAND_COLOR, marginTop: 8, marginBottom: 4 }}>Instructions &amp; Recommendations</div>
+            <div style={{ border: `0.5px solid ${SECONDARY_COLOR}`, borderRadius: 4, padding: 10, backgroundColor: '#fafafa', fontSize: 10, color: '#334155', lineHeight: 1.5 }}>{data.additionalNotes}</div>
+          </>
         )}
       </div>
     </div>

@@ -5,7 +5,13 @@ import { Ruler } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Card,
   CardContent,
@@ -19,6 +25,7 @@ import {
   LATERAL_EXCURSION_OPTIONS,
   ROSTROCAUDAL_EXCURSION_OPTIONS,
   TABLE_ANGLE_OPTIONS,
+  TMJ_PAIN_OPTIONS,
 } from '@/lib/types';
 
 function PillGroup<T extends string>({
@@ -232,24 +239,41 @@ export function ExamMeasurementsSection() {
         </div>
 
         {/* TMJ pain scale */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label className="text-xs font-semibold">TMJ Pain Scale — Right</Label>
-            <Textarea
-              placeholder="e.g. None"
-              rows={2}
-              className="text-sm"
-              {...register('examMeasurements.tmjPainFarside')}
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="text-xs font-semibold">TMJ Pain Scale — Left</Label>
-            <Textarea
-              placeholder="e.g. None"
-              rows={2}
-              className="text-sm"
-              {...register('examMeasurements.tmjPainNearside')}
-            />
+        <div className="space-y-3 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+          <p className="text-xs font-bold uppercase tracking-widest text-slate-400">TMJ Pain Scale</p>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Right</Label>
+              <Select
+                value={m.tmjPainFarside}
+                onValueChange={(v) => setValue('examMeasurements.tmjPainFarside', v as (typeof TMJ_PAIN_OPTIONS)[number])}
+              >
+                <SelectTrigger className="h-9 text-sm">
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TMJ_PAIN_OPTIONS.map((option) => (
+                    <SelectItem key={option} value={option}>{option}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Left</Label>
+              <Select
+                value={m.tmjPainNearside}
+                onValueChange={(v) => setValue('examMeasurements.tmjPainNearside', v as (typeof TMJ_PAIN_OPTIONS)[number])}
+              >
+                <SelectTrigger className="h-9 text-sm">
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TMJ_PAIN_OPTIONS.map((option) => (
+                    <SelectItem key={option} value={option}>{option}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
       </CardContent>
