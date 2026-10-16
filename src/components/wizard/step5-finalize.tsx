@@ -50,7 +50,7 @@ export function Step5Finalize({ dbId }: { dbId?: string | null }) {
       }
       const html2canvas = (await import('html2canvas')).default;
       const jsPDF = (await import('jspdf')).default;
-      const { renderDentalChartPage } = await import('@/lib/pdfDentalChart');
+      const { renderDentalChartPage, stampPageFooters } = await import('@/lib/pdfDentalChart');
 
       const element = document.getElementById('pdf-report-content');
       if (!element) return;
@@ -93,6 +93,10 @@ export function Step5Finalize({ dbId }: { dbId?: string | null }) {
       // primitives (real embedded images + stroked outlines) on its own
       // page, rather than captured from the DOM — see lib/pdfDentalChart.ts.
       await renderDentalChartPage(pdf, formData);
+
+      // Page numbers are stamped last, once every page (text + chart) exists,
+      // since only then is the final page count known.
+      stampPageFooters(pdf);
 
       const safeName = formData.horseName.replace(/[^a-zA-Z0-9]/g, '_') || 'horse';
       pdf.save(`dental_report_${safeName}_${formData.examDate}.pdf`);

@@ -61,10 +61,10 @@ export function LogoMark({ className }: { className?: string }) {
 }
 
 // For use in PDF reports (plain inline-styled div, no Tailwind dependency needed)
-export function HorseLogoForPDF({ size = 48 }: { size?: number }) {
+export function HorseLogoForPDF({ size = 48, color = '#441752' }: { size?: number; color?: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-      <HorseIcon size={size} color="#441752" />
+      <HorseIcon size={size} color={color} />
     </div>
   );
 }

@@ -4,6 +4,9 @@ import { DENTAL_CHART_SIDES, getStatusOption, TOOTH_STATUS_OPTIONS } from '@/com
 
 const BRAND_RGB: [number, number, number] = [68, 23, 82];
 const MUTED_RGB: [number, number, number] = [100, 116, 139];
+const CLINIC_ADDRESS = 'Riyadh, Saudi Arabia';
+const CLINIC_PHONE = '+966 51 030 4423';
+const CLINIC_EMAIL = 'info@equidentum.sa';
 
 function hexToRgb(hex: string): [number, number, number] {
   const n = parseInt(hex.slice(1), 16);
@@ -65,11 +68,82 @@ function drawToothOutline(
 }
 
 /**
+ * Draws the branded EquiDentum letterhead header (logo chevron + clinic
+ * contact block) at the top of the current page, matching the clinic's
+ * printed exam form. Pure jsPDF vector/text primitives — no html2canvas
+ * involved, so it renders identically everywhere a PDF is opened.
+ */
+export function drawLetterheadHeader(pdf: jsPDF): number {
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const headerHeight = 24;
+
+  pdf.setFillColor(232, 232, 232);
+  pdf.rect(0, 0, pageWidth, headerHeight, 'F');
+
+  const [br, bg, bb] = BRAND_RGB;
+  pdf.setFillColor(br, bg, bb);
+  // chevron: wide at top-left, narrowing toward the bottom — same
+  // diagonal motif as the web header. A single closed 4-point polygon:
+  // (0,0) -> (topWidth,0) -> (bottomWidth,headerHeight) -> (0,headerHeight)
+  const topWidth = 95;
+  const bottomWidth = 78;
+  pdf.lines(
+    [[topWidth, 0], [bottomWidth - topWidth, headerHeight], [-bottomWidth, 0]],
+    0, 0, [1, 1], 'F', true
+  );
+
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(11);
+  pdf.setTextColor(255, 255, 255);
+  pdf.text('EquiDentum', 6, 13);
+
+  pdf.setFontSize(12);
+  pdf.setTextColor(br, bg, bb);
+  pdf.text('EquiDentum', 90, 9);
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(7);
+  pdf.text(CLINIC_ADDRESS, 90, 14);
+  pdf.text(CLINIC_PHONE, 90, 18);
+  pdf.text(CLINIC_EMAIL, 90, 22);
+
+  return headerHeight;
+}
+
+/** Stamps "Page X of Y" in a small purple ribbon, bottom-right, on
+ * every page of the document — called once after all pages (both the
+ * html2canvas-captured text pages and the natively-drawn chart page)
+ * have been added, since only then is the final page count known. */
+export function stampPageFooters(pdf: jsPDF): void {
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const totalPages = pdf.getNumberOfPages();
+  const [br, bg, bb] = BRAND_RGB;
+
+  for (let i = 1; i <= totalPages; i++) {
+    pdf.setPage(i);
+    const tabWidth = 38;
+    const tabHeight = 8;
+    pdf.setFillColor(br, bg, bb);
+    pdf.lines(
+      [[tabWidth, 0], [0, tabHeight], [-tabWidth, 0]],
+      pageWidth - tabWidth, pageHeight - tabHeight,
+      [1, 1], 'F', true
+    );
+    pdf.setFont('helvetica', 'bold');
+    pdf.setFontSize(7.5);
+    pdf.setTextColor(255, 255, 255);
+    pdf.text(`Page ${i} of ${totalPages}`, pageWidth - tabWidth / 2, pageHeight - tabHeight / 2 + 1.5, { align: 'center' });
+  }
+}
+
+/**
  * Renders the full dental arcade chart as its own dedicated PDF page:
  * the original anatomical reference images (added as real embedded
  * images, not a DOM screenshot) plus vector-drawn edge-only outlines
  * for any examined tooth, using the exact same data model and status
- * colors as the interactive web chart. Draws directly with jsPDF's own
+ * colors as the interactive web chart. Both cheek-teeth sides are
+ * placed side by side (matching the clinic's printed form) with the
+ * incisor grid centered below. Draws directly with jsPDF's own
  * primitives rather than rasterizing an SVG, so it renders reliably
  * across viewers/printers.
  */
@@ -79,42 +153,48 @@ export async function renderDentalChartPage(pdf: jsPDF, data: DentalReportData):
   const margin = 12;
   const contentWidth = pageWidth - margin * 2;
 
-  let cursorY = margin;
+  const headerHeight = drawLetterheadHeader(pdf);
+  let cursorY = headerHeight + 10;
 
   pdf.setFont('helvetica', 'bold');
-  pdf.setFontSize(14);
+  pdf.setFontSize(13);
   pdf.setTextColor(...BRAND_RGB);
-  pdf.text('DENTAL ARCADE CHART', pageWidth / 2, cursorY + 4, { align: 'center' });
-  cursorY += 13;
+  pdf.text('DENTAL ARCADE CHART', pageWidth / 2, cursorY, { align: 'center' });
+  cursorY += 10;
 
   const photoSides = DENTAL_CHART_SIDES.filter((s) => s.backgroundSrc);
   const schematicSides = DENTAL_CHART_SIDES.filter((s) => !s.backgroundSrc);
 
-  const imgDisplayWidth = contentWidth * 0.72;
-  const imgX = margin + (contentWidth - imgDisplayWidth) / 2;
+  // side by side: each photo side gets roughly half the content width
+  const gap = 6;
+  const halfWidth = (contentWidth - gap) / 2;
+  let maxImgBottom = cursorY;
 
-  for (const side of photoSides) {
+  for (const [index, side] of photoSides.entries()) {
+    const x = margin + index * (halfWidth + gap);
+    const imgDisplayHeight = halfWidth * (side.viewBoxHeight / side.viewBoxWidth);
+
     pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(8);
+    pdf.setFontSize(7.5);
     pdf.setTextColor(...MUTED_RGB);
-    pdf.text(side.label.toUpperCase(), pageWidth / 2, cursorY + 3, { align: 'center' });
-    cursorY += 6;
+    pdf.text(side.label.toUpperCase(), x + halfWidth / 2, cursorY, { align: 'center', maxWidth: halfWidth });
+    const imgY = cursorY + 6;
 
-    const imgDisplayHeight = imgDisplayWidth * (side.viewBoxHeight / side.viewBoxWidth);
     const dataUrl = await loadImageAsDataUrl(side.backgroundSrc);
-    pdf.addImage(dataUrl, 'PNG', imgX, cursorY, imgDisplayWidth, imgDisplayHeight);
+    pdf.addImage(dataUrl, 'PNG', x, imgY, halfWidth, imgDisplayHeight);
 
-    const scaleX = imgDisplayWidth / side.viewBoxWidth;
+    const scaleX = halfWidth / side.viewBoxWidth;
     const scaleY = imgDisplayHeight / side.viewBoxHeight;
     for (const region of side.regions) {
       const finding = data.teeth[region.toothNumber];
       if (!finding?.examined) continue;
       const status = getStatusOption(finding.status);
       const dashed = finding.status === 'missing' || finding.status === 'extracted';
-      drawToothOutline(pdf, region.points, imgX, cursorY, scaleX, scaleY, status.hex, dashed, 0.9);
+      drawToothOutline(pdf, region.points, x, imgY, scaleX, scaleY, status.hex, dashed, 0.8);
     }
-    cursorY += imgDisplayHeight + 7;
+    maxImgBottom = Math.max(maxImgBottom, imgY + imgDisplayHeight);
   }
+  cursorY = maxImgBottom + 8;
 
   for (const side of schematicSides) {
     pdf.setFont('helvetica', 'bold');
@@ -123,7 +203,7 @@ export async function renderDentalChartPage(pdf: jsPDF, data: DentalReportData):
     pdf.text(side.label.toUpperCase(), pageWidth / 2, cursorY + 3, { align: 'center' });
     cursorY += 6;
 
-    const gridWidth = contentWidth * 0.55;
+    const gridWidth = contentWidth * 0.5;
     const gridHeight = gridWidth * (side.viewBoxHeight / side.viewBoxWidth);
     const gridX = margin + (contentWidth - gridWidth) / 2;
     const scaleX = gridWidth / side.viewBoxWidth;

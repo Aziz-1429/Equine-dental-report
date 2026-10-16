@@ -32,6 +32,37 @@ export interface SedationEntry {
   time: string;
 }
 
+export type LateralExcursion = 'Smooth' | 'Step' | 'Mouth opens to slide' | '';
+export type RostrocaudalExcursion = 'Normal' | 'Reduced' | 'Painful' | '';
+export type TableAngle = 'Normal' | 'Flat' | 'Steep' | 'Excessive' | '';
+
+export interface ExcursionAssessment {
+  excursion: LateralExcursion;
+  postDentalExcursion: LateralExcursion;
+  percentOcclusion: string;
+  postDentalPercentOcclusion: string;
+}
+
+export interface TableAngleAssessment {
+  before: TableAngle;
+  after: TableAngle;
+}
+
+/** The farside/nearside oral examination measurements from the clinic's
+ * printed exam form — lateral excursion, occlusion percentage, table
+ * angles, and TMJ pain scale, each tracked before/after the dental work. */
+export interface ExamMeasurements {
+  farside: ExcursionAssessment;
+  nearside: ExcursionAssessment;
+  rostrocaudalExcursion: RostrocaudalExcursion;
+  postDentalRostrocaudalExcursion: RostrocaudalExcursion;
+  molarAngleFarside: TableAngleAssessment;
+  incisorAngle: TableAngleAssessment;
+  molarAngleNearside: TableAngleAssessment;
+  tmjPainFarside: string;
+  tmjPainNearside: string;
+}
+
 export interface DentalReportData {
   // Step 1 — Administrative
   clientName: string;
@@ -42,6 +73,7 @@ export interface DentalReportData {
 
   // Step 2 — Patient
   horseName: string;
+  horseCode: string;
   age: string;
   breed: string;
   sex: string;
@@ -55,6 +87,7 @@ export interface DentalReportData {
   pathologies: PathologyFinding[];
   softTissue: SoftTissueFinding[];
   chartingNotes: string;
+  examMeasurements: ExamMeasurements;
 
   // Step 4 — Treatment
   treatments: TreatmentPerformed[];
@@ -111,6 +144,10 @@ export const FOLLOW_UP_OPTIONS = [
 
 export const SEX_OPTIONS = ['Stallion', 'Gelding', 'Mare', 'Colt', 'Filly'] as const;
 
+export const LATERAL_EXCURSION_OPTIONS: LateralExcursion[] = ['Smooth', 'Step', 'Mouth opens to slide'];
+export const ROSTROCAUDAL_EXCURSION_OPTIONS: RostrocaudalExcursion[] = ['Normal', 'Reduced', 'Painful'];
+export const TABLE_ANGLE_OPTIONS: TableAngle[] = ['Normal', 'Flat', 'Steep', 'Excessive'];
+
 export const HORSE_BREEDS = [
   'Thoroughbred', 'Arabian', 'Quarter Horse', 'Warmblood',
   'Standardbred', 'Appaloosa', 'Paint', 'Draft', 'Pony', 'Mixed/Other',
@@ -160,6 +197,28 @@ export function createInitialSedationDrugs(): SedationEntry[] {
   return [{ id: 'sed-0', drug: '', dose: '', time: '' }];
 }
 
+function createEmptyExcursionAssessment(): ExcursionAssessment {
+  return { excursion: '', postDentalExcursion: '', percentOcclusion: '', postDentalPercentOcclusion: '' };
+}
+
+function createEmptyTableAngleAssessment(): TableAngleAssessment {
+  return { before: '', after: '' };
+}
+
+export function createInitialExamMeasurements(): ExamMeasurements {
+  return {
+    farside: createEmptyExcursionAssessment(),
+    nearside: createEmptyExcursionAssessment(),
+    rostrocaudalExcursion: '',
+    postDentalRostrocaudalExcursion: '',
+    molarAngleFarside: createEmptyTableAngleAssessment(),
+    incisorAngle: createEmptyTableAngleAssessment(),
+    molarAngleNearside: createEmptyTableAngleAssessment(),
+    tmjPainFarside: '',
+    tmjPainNearside: '',
+  };
+}
+
 export function createInitialReport(): DentalReportData {
   return {
     clientName: '',
@@ -168,6 +227,7 @@ export function createInitialReport(): DentalReportData {
     stableLocation: '',
     examDate: new Date().toISOString().split('T')[0],
     horseName: '',
+    horseCode: '',
     age: '',
     breed: '',
     sex: '',
@@ -179,6 +239,7 @@ export function createInitialReport(): DentalReportData {
     pathologies: createInitialPathologies(),
     softTissue: createInitialSoftTissue(),
     chartingNotes: '',
+    examMeasurements: createInitialExamMeasurements(),
     treatments: createInitialTreatments(),
     dietRecommendations: '',
     followUpTimeline: '6 months',

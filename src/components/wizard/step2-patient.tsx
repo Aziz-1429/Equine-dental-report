@@ -107,6 +107,20 @@ export function Step2Patient() {
 
           <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
             <div className="space-y-2">
+              <Label htmlFor="horseCode" className="text-sm font-semibold">
+                Horse Code
+              </Label>
+              <Input
+                id="horseCode"
+                placeholder="e.g. EQ-2024-017"
+                className="h-12 text-base"
+                {...register('horseCode')}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div className="space-y-2">
               <Label className="text-sm font-semibold">Breed</Label>
               <Select
                 value={watch('breed')}
