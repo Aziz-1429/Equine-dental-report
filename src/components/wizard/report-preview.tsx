@@ -67,27 +67,46 @@ function TitleBanner({ title }: { title: string }) {
   );
 }
 
+// A fixed box height paired with a line-height of the SAME value is the
+// one centering technique that survives html2canvas rasterization
+// reliably — flex alignItems/justifyContent on the badge was confirmed
+// to drift off-center in the actual downloaded PDF even though it
+// looked correct in a live browser preview.
+const FIELD_BOX_HEIGHT = 24;
+
 function FieldBox({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ width: '48%', display: 'flex', alignItems: 'center', marginBottom: 8 }}>
+    <div style={{ width: '48%', display: 'flex', marginBottom: 8, height: FIELD_BOX_HEIGHT }}>
       <div
         style={{
           backgroundColor: BRAND_COLOR,
           color: '#ffffff',
           fontWeight: 700,
           fontSize: 9,
-          lineHeight: 1,
-          padding: '8px 9px',
+          height: FIELD_BOX_HEIGHT,
+          lineHeight: `${FIELD_BOX_HEIGHT}px`,
+          padding: '0 9px',
           borderRadius: 3,
           whiteSpace: 'nowrap',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
+          textAlign: 'center',
         }}
       >
         {label}
       </div>
-      <div style={{ marginLeft: 8, fontSize: 11, color: value ? '#1e293b' : '#cbd5e1', fontWeight: 500, fontStyle: value ? 'normal' : 'italic' }}>
+      <div
+        style={{
+          marginLeft: 8,
+          fontSize: 11,
+          height: FIELD_BOX_HEIGHT,
+          lineHeight: `${FIELD_BOX_HEIGHT}px`,
+          color: value ? '#1e293b' : '#cbd5e1',
+          fontWeight: 500,
+          fontStyle: value ? 'normal' : 'italic',
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}
+      >
         {value || '—'}
       </div>
     </div>
@@ -103,13 +122,18 @@ function PillRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-function ExamMeasurementsBlock({ data }: { data: DentalReportData }) {
+function hasExamMeasurements(data: DentalReportData): boolean {
   const m = data.examMeasurements;
-  const anyMeasurement =
+  return Boolean(
     m.farside.excursion || m.nearside.excursion || m.rostrocaudalExcursion ||
     m.molarAngleFarside.before || m.incisorAngle.before || m.molarAngleNearside.before ||
-    m.tmjPainFarside || m.tmjPainNearside;
-  if (!anyMeasurement) return null;
+    m.tmjPainFarside || m.tmjPainNearside
+  );
+}
+
+function ExamMeasurementsBlock({ data }: { data: DentalReportData }) {
+  if (!hasExamMeasurements(data)) return null;
+  const m = data.examMeasurements;
 
   return (
     <>
@@ -117,9 +141,9 @@ function ExamMeasurementsBlock({ data }: { data: DentalReportData }) {
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 9.5, marginBottom: 6 }}>
         <thead>
           <tr style={{ backgroundColor: '#fafafa' }}>
-            <th style={{ padding: '4px 6px', textAlign: 'center', fontWeight: 700, color: BRAND_COLOR, border: `0.5px solid ${SECONDARY_COLOR}` }}>FARSIDE</th>
+            <th style={{ padding: '4px 6px', textAlign: 'center', fontWeight: 700, color: BRAND_COLOR, border: `0.5px solid ${SECONDARY_COLOR}` }}>RIGHT SIDE</th>
             <th style={{ padding: '4px 6px', textAlign: 'center', fontWeight: 700, color: BRAND_COLOR, border: `0.5px solid ${SECONDARY_COLOR}` }}>PROTRUSION | RETRUSION MOVEMENT</th>
-            <th style={{ padding: '4px 6px', textAlign: 'center', fontWeight: 700, color: BRAND_COLOR, border: `0.5px solid ${SECONDARY_COLOR}` }}>NEARSIDE</th>
+            <th style={{ padding: '4px 6px', textAlign: 'center', fontWeight: 700, color: BRAND_COLOR, border: `0.5px solid ${SECONDARY_COLOR}` }}>LEFT SIDE</th>
           </tr>
         </thead>
         <tbody>
@@ -147,9 +171,9 @@ function ExamMeasurementsBlock({ data }: { data: DentalReportData }) {
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 9.5, marginBottom: 6 }}>
         <thead>
           <tr style={{ backgroundColor: '#fafafa' }}>
-            <th style={{ padding: '4px 6px', textAlign: 'center', fontWeight: 700, color: BRAND_COLOR, border: `0.5px solid ${SECONDARY_COLOR}` }}>MOLAR TABLE ANGLE (FARSIDE)</th>
+            <th style={{ padding: '4px 6px', textAlign: 'center', fontWeight: 700, color: BRAND_COLOR, border: `0.5px solid ${SECONDARY_COLOR}` }}>MOLAR TABLE ANGLE (RIGHT)</th>
             <th style={{ padding: '4px 6px', textAlign: 'center', fontWeight: 700, color: BRAND_COLOR, border: `0.5px solid ${SECONDARY_COLOR}` }}>INCISOR TABLE ANGLE</th>
-            <th style={{ padding: '4px 6px', textAlign: 'center', fontWeight: 700, color: BRAND_COLOR, border: `0.5px solid ${SECONDARY_COLOR}` }}>MOLAR TABLE ANGLE (NEARSIDE)</th>
+            <th style={{ padding: '4px 6px', textAlign: 'center', fontWeight: 700, color: BRAND_COLOR, border: `0.5px solid ${SECONDARY_COLOR}` }}>MOLAR TABLE ANGLE (LEFT)</th>
           </tr>
         </thead>
         <tbody>
@@ -172,11 +196,11 @@ function ExamMeasurementsBlock({ data }: { data: DentalReportData }) {
 
       <div style={{ display: 'flex', gap: 10 }}>
         <div style={{ width: '50%', border: `0.5px solid ${SECONDARY_COLOR}`, borderRadius: 4 }}>
-          <div style={{ backgroundColor: '#fafafa', padding: '4px 8px', fontWeight: 700, fontSize: 9, color: BRAND_COLOR }}>TMJ PAIN SCALE — FARSIDE</div>
+          <div style={{ backgroundColor: '#fafafa', padding: '4px 8px', fontWeight: 700, fontSize: 9, color: BRAND_COLOR }}>TMJ PAIN SCALE — RIGHT</div>
           <div style={{ padding: 8, fontSize: 10, color: '#334155', minHeight: 20 }}>{m.tmjPainFarside || '—'}</div>
         </div>
         <div style={{ width: '50%', border: `0.5px solid ${SECONDARY_COLOR}`, borderRadius: 4 }}>
-          <div style={{ backgroundColor: '#fafafa', padding: '4px 8px', fontWeight: 700, fontSize: 9, color: BRAND_COLOR }}>TMJ PAIN SCALE — NEARSIDE</div>
+          <div style={{ backgroundColor: '#fafafa', padding: '4px 8px', fontWeight: 700, fontSize: 9, color: BRAND_COLOR }}>TMJ PAIN SCALE — LEFT</div>
           <div style={{ padding: 8, fontSize: 10, color: '#334155', minHeight: 20 }}>{m.tmjPainNearside || '—'}</div>
         </div>
       </div>
@@ -207,16 +231,28 @@ export function ReportPreview({ data }: { data: DentalReportData }) {
     ? new Date(data.examDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
     : '—';
 
+  // Each section below is wrapped in its own `data-pdf-section` div so
+  // the PDF generator can rasterize and place sections one at a time —
+  // the branded header (drawn natively on every PDF page by
+  // lib/pdfDentalChart.ts) and title banner are deliberately excluded
+  // from this list, so a page break can only ever fall BETWEEN two
+  // sections, never through the middle of one.
+  const sectionStyle = { padding: '0 40px', backgroundColor: '#ffffff' } as const;
+
   return (
-    <div id="pdf-report-content" style={{ width: '794px', minHeight: '1123px', backgroundColor: '#ffffff', fontFamily: 'Helvetica, Arial, sans-serif', color: '#1e293b', fontSize: 10, lineHeight: 1.4, boxSizing: 'border-box' }}>
+    <div id="pdf-report-content" style={{ width: '794px', backgroundColor: '#ffffff', fontFamily: 'Helvetica, Arial, sans-serif', color: '#1e293b', fontSize: 10, lineHeight: 1.4, boxSizing: 'border-box' }}>
+      {/* Shown in the on-screen/inline preview only — the real PDF draws
+          its own vector header + title banner on every page instead. */}
       <LetterheadHeader />
-      <div style={{ padding: '24px 40px 40px' }}>
+      <div style={{ padding: '24px 40px 0' }}>
         <TitleBanner title="Equine Dental Report" />
         <div style={{ textAlign: 'right', fontSize: 9, color: '#64748b', marginTop: -12, marginBottom: 12 }}>
           {formattedDate}
         </div>
+      </div>
 
-        {/* Administrative */}
+      {/* Administrative */}
+      <div data-pdf-section style={sectionStyle}>
         <SectionTitle>Client &amp; Administrative Information</SectionTitle>
         <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between' }}>
           <FieldBox label="Owner" value={data.clientName} />
@@ -225,8 +261,10 @@ export function ReportPreview({ data }: { data: DentalReportData }) {
           <FieldBox label="Date" value={formattedDate} />
           <FieldBox label="Email" value={data.email} />
         </div>
+      </div>
 
-        {/* Patient */}
+      {/* Patient */}
+      <div data-pdf-section style={sectionStyle}>
         <SectionTitle>Patient Information</SectionTitle>
         <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between' }}>
           <FieldBox label="Equine Name" value={data.horseName} />
@@ -237,10 +275,11 @@ export function ReportPreview({ data }: { data: DentalReportData }) {
           <FieldBox label="BCS" value={data.bodyConditionScore} />
           <FieldBox label="Color" value={data.color} />
         </div>
+      </div>
 
-        {/* Sedation */}
+      {/* Sedation */}
       {data.sedationUsed && activeDrugs.length > 0 && (
-        <>
+        <div data-pdf-section style={sectionStyle}>
           <SectionTitle>Sedation Record</SectionTitle>
           {activeDrugs.map((d, idx) => (
             <div key={d.id} style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between' }}>
@@ -249,10 +288,14 @@ export function ReportPreview({ data }: { data: DentalReportData }) {
               <FieldBox label="Time" value={d.time} />
             </div>
           ))}
-        </>
+        </div>
       )}
 
-      <ExamMeasurementsBlock data={data} />
+      {hasExamMeasurements(data) && (
+        <div data-pdf-section style={sectionStyle}>
+          <ExamMeasurementsBlock data={data} />
+        </div>
+      )}
 
       {/* The dental arcade chart itself (original skull artwork plus
           edge-outline exam highlights) is rendered as its own dedicated
@@ -262,7 +305,7 @@ export function ReportPreview({ data }: { data: DentalReportData }) {
 
       {/* Tooth-level findings */}
       {toothFindings.length > 0 && (
-        <>
+        <div data-pdf-section style={sectionStyle}>
           <SectionTitle>Tooth-Level Findings</SectionTitle>
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 9.5 }}>
             <thead>
@@ -288,50 +331,51 @@ export function ReportPreview({ data }: { data: DentalReportData }) {
               ))}
             </tbody>
           </table>
-        </>
+        </div>
       )}
 
       {/* Pathologies */}
       {checkedPathologies.length > 0 && (
-        <>
+        <div data-pdf-section style={sectionStyle}>
           <SectionTitle>Pathologies Identified</SectionTitle>
           <div>{checkedPathologies.map((p) => <Tag key={p.id} label={p.label} color="amber" />)}</div>
-        </>
+        </div>
       )}
 
       {/* Soft tissue */}
       {checkedSoftTissue.length > 0 && (
-        <>
+        <div data-pdf-section style={sectionStyle}>
           <SectionTitle>Soft Tissue Evaluation</SectionTitle>
           <div>{checkedSoftTissue.map((s) => <Tag key={s.id} label={s.label} color={s.label.includes('normal') ? 'green' : 'amber'} />)}</div>
-        </>
+        </div>
       )}
 
       {/* Charting notes */}
       {data.chartingNotes && (
-        <>
+        <div data-pdf-section style={sectionStyle}>
           <SectionTitle>Charting Notes</SectionTitle>
           <div style={{ border: `0.5px solid ${SECONDARY_COLOR}`, borderRadius: 4, padding: 10, backgroundColor: '#fafafa', fontSize: 10, color: '#334155', lineHeight: 1.5 }}>{data.chartingNotes}</div>
-        </>
+        </div>
       )}
 
       {/* Treatments */}
       {checkedTreatments.length > 0 && (
-        <>
+        <div data-pdf-section style={sectionStyle}>
           <SectionTitle>Procedures Performed</SectionTitle>
           <div>{checkedTreatments.map((t) => <Tag key={t.id} label={t.label} color="brand" />)}</div>
-        </>
+        </div>
       )}
 
       {/* Recommendations */}
-      <SectionTitle>Recommendations</SectionTitle>
-      <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-        <FieldBox label="Follow-Up Timeline" value={data.followUpTimeline} />
-        <FieldBox label="Diet Recommendations" value={data.dietRecommendations} />
-      </div>
-      {data.additionalNotes && (
-        <div style={{ border: `0.5px solid ${SECONDARY_COLOR}`, borderRadius: 4, padding: 10, backgroundColor: '#fafafa', fontSize: 10, color: '#334155', lineHeight: 1.5, marginTop: 6 }}>{data.additionalNotes}</div>
-      )}
+      <div data-pdf-section style={{ ...sectionStyle, paddingBottom: 40 }}>
+        <SectionTitle>Recommendations</SectionTitle>
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+          <FieldBox label="Follow-Up Timeline" value={data.followUpTimeline} />
+          <FieldBox label="Diet Recommendations" value={data.dietRecommendations} />
+        </div>
+        {data.additionalNotes && (
+          <div style={{ border: `0.5px solid ${SECONDARY_COLOR}`, borderRadius: 4, padding: 10, backgroundColor: '#fafafa', fontSize: 10, color: '#334155', lineHeight: 1.5, marginTop: 6 }}>{data.additionalNotes}</div>
+        )}
       </div>
     </div>
   );

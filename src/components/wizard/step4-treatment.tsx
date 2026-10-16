@@ -125,26 +125,21 @@ export function Step4Treatment() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-            {FOLLOW_UP_OPTIONS.map((option) => {
-              const active = watch('followUpTimeline') === option;
-              return (
-                <button
-                  key={option}
-                  type="button"
-                  onClick={() => setValue('followUpTimeline', option)}
-                  className={cn(
-                    'rounded-lg border-2 p-3 text-center text-sm font-semibold transition-all active:scale-95 touch-target',
-                    active
-                      ? 'border-primary bg-primary text-primary-foreground'
-                      : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400'
-                  )}
-                >
+          <Select
+            value={watch('followUpTimeline')}
+            onValueChange={(v) => setValue('followUpTimeline', v)}
+          >
+            <SelectTrigger className="h-11 text-sm">
+              <SelectValue placeholder="Select a follow-up interval" />
+            </SelectTrigger>
+            <SelectContent>
+              {FOLLOW_UP_OPTIONS.map((option) => (
+                <SelectItem key={option} value={option}>
                   {option}
-                </button>
-              );
-            })}
-          </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </CardContent>
       </Card>
 
