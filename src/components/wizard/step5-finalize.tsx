@@ -50,43 +50,72 @@ export function Step5Finalize({ dbId }: { dbId?: string | null }) {
       }
       const html2canvas = (await import('html2canvas')).default;
       const jsPDF = (await import('jspdf')).default;
-      const { renderDentalChartPage, stampPageFooters } = await import('@/lib/pdfDentalChart');
+      const { renderDentalChartPage, stampPageFooters, drawLetterheadHeader, drawTitleBanner } =
+        await import('@/lib/pdfDentalChart');
 
-      const element = document.getElementById('pdf-report-content');
-      if (!element) return;
+      const container = document.getElementById('pdf-report-content');
+      if (!container) return;
+      const sections = Array.from(container.querySelectorAll<HTMLElement>('[data-pdf-section]'));
 
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: '#ffffff',
-      });
-
-      const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
-      const imgWidth = pdfWidth;
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      // Keeps content clear of the "Page X of Y" pill stamped afterward.
+      const FOOTER_RESERVE_MM = 14;
+      const maxContentY = pdfHeight - FOOTER_RESERVE_MM;
 
-      // A small tolerance absorbs sub-millimeter rounding from the
-      // px->mm conversion above — without it, content landing a
-      // fraction of a mm over one page height triggers a second page
-      // that's almost entirely blank.
-      const PAGE_OVERFLOW_TOLERANCE_MM = 2;
+      // The branded letterhead header is drawn natively with jsPDF on
+      // EVERY page (never captured from the DOM), so the logo and clinic
+      // details are guaranteed to appear identically everywhere —
+      // including any continuation page this loop creates below.
+      let headerHeight = await drawLetterheadHeader(pdf);
+      const formattedDate = formData.examDate
+        ? new Date(formData.examDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+        : '—';
+      const bannerHeight = drawTitleBanner(pdf, headerHeight + 4, 'Equine Dental Report', formattedDate);
+      let cursorY = headerHeight + 4 + bannerHeight;
 
-      if (imgHeight <= pdfHeight + PAGE_OVERFLOW_TOLERANCE_MM) {
-        pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
-      } else {
-        let heightLeft = imgHeight;
-        let position = 0;
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pdfHeight;
-        while (heightLeft > PAGE_OVERFLOW_TOLERANCE_MM) {
-          position -= pdfHeight;
-          pdf.addPage();
-          pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-          heightLeft -= pdfHeight;
+      const startNewPage = async () => {
+        pdf.addPage();
+        headerHeight = await drawLetterheadHeader(pdf);
+        cursorY = headerHeight + 8;
+      };
+
+      // Each section (one card's worth of content) is captured and placed
+      // as its own image, so a page break only ever falls BETWEEN
+      // sections — never through the middle of one — unless a single
+      // section alone is taller than a full page, handled by the slicing
+      // fallback below.
+      for (const section of sections) {
+        const canvas = await html2canvas(section, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+        });
+        const imgData = canvas.toDataURL('image/png');
+        const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+        const usablePageHeight = maxContentY - headerHeight - 8;
+
+        if (imgHeight > usablePageHeight) {
+          if (cursorY > headerHeight + 8) await startNewPage();
+          let position = cursorY;
+          pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+          let consumed = maxContentY - cursorY;
+          while (consumed < imgHeight - 0.5) {
+            await startNewPage();
+            position = cursorY - consumed;
+            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+            consumed += maxContentY - cursorY;
+          }
+          cursorY = maxContentY;
+          continue;
         }
+
+        if (cursorY + imgHeight > maxContentY) {
+          await startNewPage();
+        }
+        pdf.addImage(imgData, 'PNG', 0, cursorY, pdfWidth, imgHeight);
+        cursorY += imgHeight;
       }
 
       // The dental arcade chart is drawn directly with jsPDF's own vector

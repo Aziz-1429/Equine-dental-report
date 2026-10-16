@@ -132,7 +132,7 @@ export async function drawLetterheadHeader(pdf: jsPDF): Promise<number> {
   return headerHeight;
 }
 
-/** Stamps "Page X of Y" in a small purple ribbon, bottom-right, on
+/** Stamps "Page X of Y" in a small rounded purple pill, bottom-right, on
  * every page of the document — called once after all pages (both the
  * html2canvas-captured text pages and the natively-drawn chart page)
  * have been added, since only then is the final page count known. */
@@ -146,17 +146,47 @@ export function stampPageFooters(pdf: jsPDF): void {
     pdf.setPage(i);
     const tabWidth = 38;
     const tabHeight = 8;
+    const tabX = pageWidth - tabWidth - 6;
+    const tabY = pageHeight - tabHeight - 4;
     pdf.setFillColor(br, bg, bb);
-    pdf.lines(
-      [[tabWidth, 0], [0, tabHeight], [-tabWidth, 0]],
-      pageWidth - tabWidth, pageHeight - tabHeight,
-      [1, 1], 'F', true
-    );
+    pdf.roundedRect(tabX, tabY, tabWidth, tabHeight, 2.5, 2.5, 'F');
     pdf.setFont('helvetica', 'bold');
     pdf.setFontSize(7.5);
     pdf.setTextColor(255, 255, 255);
-    pdf.text(`Page ${i} of ${totalPages}`, pageWidth - tabWidth / 2, pageHeight - tabHeight / 2 + 1.5, { align: 'center' });
+    pdf.text(`Page ${i} of ${totalPages}`, tabX + tabWidth / 2, tabY + tabHeight / 2 + 1.5, { align: 'center' });
   }
+}
+
+/**
+ * Draws the "Equine Dental Report" title banner (chevron + heading +
+ * exam date) directly with jsPDF vector primitives, for page 1 of the
+ * report. Native-drawn like the letterhead header, so it never needs
+ * html2canvas rasterization and renders identically on every page.
+ */
+export function drawTitleBanner(pdf: jsPDF, startY: number, title: string, dateText: string): number {
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const margin = 12;
+  const bannerHeight = 11;
+  const [br, bg, bb] = BRAND_RGB;
+
+  pdf.setFillColor(br, bg, bb);
+  pdf.lines(
+    [[pageWidth - margin * 2, 0], [0, bannerHeight], [-(pageWidth - margin * 2), 0]],
+    margin, startY, [1, 1], 'F', true
+  );
+
+  pdf.setFont('helvetica', 'bold');
+  pdf.setFontSize(12);
+  pdf.setTextColor(255, 255, 255);
+  pdf.text(title, margin + 6, startY + bannerHeight / 2 + 1.5);
+
+  pdf.setFont('helvetica', 'normal');
+  pdf.setFontSize(8);
+  pdf.setTextColor(...MUTED_RGB);
+  const dateY = startY + bannerHeight + 7;
+  pdf.text(dateText, pageWidth - margin, dateY, { align: 'right' });
+
+  return dateY - startY + 2;
 }
 
 /**

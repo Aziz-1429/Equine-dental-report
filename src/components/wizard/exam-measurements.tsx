@@ -64,7 +64,7 @@ export function ExamMeasurementsSection() {
           </div>
           <div>
             <CardTitle className="text-lg">Oral Examination Measurements</CardTitle>
-            <CardDescription>Farside / nearside excursion, occlusion, table angle, and TMJ pain scale</CardDescription>
+            <CardDescription>Left / right excursion, occlusion, table angle, and TMJ pain scale</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -72,7 +72,7 @@ export function ExamMeasurementsSection() {
         {/* Lateral / rostro-caudal excursion */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div className="space-y-3 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
-            <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Farside</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Right Side</p>
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold">Lateral Excursion</Label>
               <PillGroup
@@ -130,7 +130,7 @@ export function ExamMeasurementsSection() {
           </div>
 
           <div className="space-y-3 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
-            <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Nearside</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Left Side</p>
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold">Lateral Excursion</Label>
               <PillGroup
@@ -171,7 +171,7 @@ export function ExamMeasurementsSection() {
         {/* Table angles */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div className="space-y-3 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
-            <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Molar Table Angle (Farside)</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Molar Table Angle (Right)</p>
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold">Before Dental Work</Label>
               <PillGroup
@@ -211,7 +211,7 @@ export function ExamMeasurementsSection() {
           </div>
 
           <div className="space-y-3 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
-            <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Molar Table Angle (Nearside)</p>
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Molar Table Angle (Left)</p>
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold">Before Dental Work</Label>
               <PillGroup
@@ -234,7 +234,7 @@ export function ExamMeasurementsSection() {
         {/* TMJ pain scale */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold">TMJ Pain Scale — Farside</Label>
+            <Label className="text-xs font-semibold">TMJ Pain Scale — Right</Label>
             <Textarea
               placeholder="e.g. None"
               rows={2}
@@ -243,7 +243,7 @@ export function ExamMeasurementsSection() {
             />
           </div>
           <div className="space-y-1.5">
-            <Label className="text-xs font-semibold">TMJ Pain Scale — Nearside</Label>
+            <Label className="text-xs font-semibold">TMJ Pain Scale — Left</Label>
             <Textarea
               placeholder="e.g. None"
               rows={2}
