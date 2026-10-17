@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Trash2 } from 'lucide-react';
+import { Trash2, ScanSearch } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -19,6 +19,7 @@ export default function DentalExamPage() {
   const { exam, updateTooth, setToothStatus, clearTooth, setGeneralNotes, clearAll, hydrated } = useDentalExam(side);
   const [selectedTooth, setSelectedTooth] = useState<string | null>(null);
   const [confirmingClearAll, setConfirmingClearAll] = useState(false);
+  const [showAllOutlines, setShowAllOutlines] = useState(false);
 
   const handleSelectSide = (id: string) => {
     setSideId(id);
@@ -72,15 +73,26 @@ export default function DentalExamPage() {
 
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <DentalLegend />
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="text-destructive hover:text-destructive"
-            onClick={() => setConfirmingClearAll(true)}
-          >
-            <Trash2 className="mr-1.5 h-3.5 w-3.5" /> Clear all examination data
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant={showAllOutlines ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setShowAllOutlines((v) => !v)}
+            >
+              <ScanSearch className="mr-1.5 h-3.5 w-3.5" />
+              {showAllOutlines ? 'Hide' : 'Verify'} tooth alignment
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="text-destructive hover:text-destructive"
+              onClick={() => setConfirmingClearAll(true)}
+            >
+              <Trash2 className="mr-1.5 h-3.5 w-3.5" /> Clear all examination data
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_380px]">
@@ -91,6 +103,7 @@ export default function DentalExamPage() {
               exam={exam}
               selectedTooth={selectedTooth}
               onSelectTooth={setSelectedTooth}
+              showAllOutlines={showAllOutlines}
             />
           </div>
 

@@ -195,28 +195,6 @@ export function ToothExamPanel({ finding, onChange, onMarkStatus, onClear, onClo
         </div>
 
         <div className="space-y-1.5">
-          <Label className="text-xs font-semibold">Treatment</Label>
-          <Textarea
-            value={finding.treatment}
-            onChange={(e) => onChange({ treatment: e.target.value })}
-            rows={2}
-            placeholder="Treatment performed, if any..."
-            className="text-sm"
-          />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label className="text-xs font-semibold">Recommendation</Label>
-          <Textarea
-            value={finding.recommendation}
-            onChange={(e) => onChange({ recommendation: e.target.value })}
-            rows={2}
-            placeholder="Follow-up recommendation..."
-            className="text-sm"
-          />
-        </div>
-
-        <div className="space-y-1.5">
           <Label className="text-xs font-semibold">Notes</Label>
           <Textarea
             value={finding.notes}

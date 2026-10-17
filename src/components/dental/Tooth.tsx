@@ -2,7 +2,7 @@
 
 import { KeyboardEvent } from 'react';
 import { ToothFinding, ToothRegion } from './dentalTypes';
-import { getStatusOption, toothDomePath, isUpperIncisor } from './dentalData';
+import { getStatusOption, getOutlineClassName, toothDomePath, isUpperIncisor } from './dentalData';
 
 interface ToothProps {
   region: ToothRegion;
@@ -92,7 +92,7 @@ export function Tooth({ region, finding, selected, onSelect, hasBackground }: To
             className={
               selected
                 ? 'stroke-primary drop-shadow-[0_0_4px_rgba(68,23,82,0.6)]'
-                : status.strokeClassName
+                : getOutlineClassName(finding.status)
             }
             strokeWidth={selected ? 4 : 2}
             strokeDasharray={!selected && isBroken ? '10 6' : undefined}
@@ -105,7 +105,7 @@ export function Tooth({ region, finding, selected, onSelect, hasBackground }: To
             className={
               selected
                 ? 'stroke-primary drop-shadow-[0_0_4px_rgba(68,23,82,0.6)]'
-                : status.strokeClassName
+                : getOutlineClassName(finding.status)
             }
             strokeWidth={selected ? 4 : 2}
             strokeDasharray={!selected && isBroken ? '10 6' : undefined}
