@@ -353,7 +353,6 @@ export function ReportPreview({ data }: { data: DentalReportData }) {
             <div key={d.id} style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between' }}>
               <FieldBox label={`Drug ${activeDrugs.length > 1 ? `#${idx + 1}` : ''}`} value={d.drug} />
               <FieldBox label="Dose" value={d.dose} />
-              <FieldBox label="Time" value={d.time} />
             </div>
           ))}
         </div>
@@ -368,7 +367,6 @@ export function ReportPreview({ data }: { data: DentalReportData }) {
               <FieldBox label={`Block ${activeBlocks.length > 1 ? `#${idx + 1}` : ''}`} value={b.block} />
               <FieldBox label="Drug" value={b.drug} />
               <FieldBox label="Dose" value={b.dose} />
-              <FieldBox label="Time" value={b.time} />
             </div>
           ))}
         </div>
