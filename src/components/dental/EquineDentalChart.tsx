@@ -37,34 +37,14 @@ export function EquineDentalChart({ side, exam, selectedTooth, onSelectTooth }: 
       aria-label={side.label}
     >
       {hasBackground ? (
-        <>
-          <image
-            href={side.backgroundSrc}
-            x={0}
-            y={0}
-            width={side.viewBoxWidth}
-            height={side.viewBoxHeight}
-            preserveAspectRatio="xMidYMid meet"
-          />
-          {/* The reference artwork itself prints a few wrong Triadan
-              numbers (a generation artifact) — patched over here rather
-              than touching the source image. */}
-          {side.labelCorrections?.map((c, i) => (
-            <g key={i}>
-              <rect x={c.x} y={c.y} width={c.width} height={c.height} fill="#fafafa" />
-              <text
-                x={c.x + c.width / 2}
-                y={c.y + c.height / 2}
-                textAnchor="middle"
-                dominantBaseline="central"
-                className="fill-slate-900 font-bold"
-                style={{ fontSize: Math.min(c.width, c.height) * 0.55 }}
-              >
-                {c.correctLabel}
-              </text>
-            </g>
-          ))}
-        </>
+        <image
+          href={side.backgroundSrc}
+          x={0}
+          y={0}
+          width={side.viewBoxWidth}
+          height={side.viewBoxHeight}
+          preserveAspectRatio="xMidYMid meet"
+        />
       ) : (
         <>
           <rect
