@@ -1,6 +1,6 @@
 import type jsPDF from 'jspdf';
 import { DentalReportData } from './types';
-import { DENTAL_CHART_SIDES, getStatusOption, TOOTH_STATUS_OPTIONS, toothDomePoints, isUpperIncisor, INCISOR_MIDLINE_X } from '@/components/dental/dentalData';
+import { DENTAL_CHART_SIDES, getOutlineHex, TOOTH_STATUS_OPTIONS, toothDomePoints, isUpperIncisor, INCISOR_MIDLINE_X } from '@/components/dental/dentalData';
 import { HORSE_VIEWBOX, HORSE_PATHS } from '@/components/logo';
 
 const BRAND_RGB: [number, number, number] = [68, 23, 82];
@@ -242,9 +242,8 @@ export async function renderDentalChartPage(pdf: jsPDF, data: DentalReportData):
     for (const region of side.regions) {
       const finding = data.teeth[region.toothNumber];
       if (!finding?.examined) continue;
-      const status = getStatusOption(finding.status);
       const dashed = finding.status === 'missing' || finding.status === 'extracted';
-      drawToothOutline(pdf, region.points, x, imgY, scaleX, scaleY, status.hex, dashed, 0.15);
+      drawToothOutline(pdf, region.points, x, imgY, scaleX, scaleY, getOutlineHex(finding.status), dashed, 0.15);
     }
     maxImgBottom = Math.max(maxImgBottom, imgY + imgDisplayHeight);
   }
@@ -274,7 +273,6 @@ export async function renderDentalChartPage(pdf: jsPDF, data: DentalReportData):
     for (const region of side.regions) {
       const finding = data.teeth[region.toothNumber];
       const examined = Boolean(finding?.examined);
-      const status = getStatusOption(finding?.status ?? 'normal');
 
       const coords = region.points
         .trim()
@@ -290,7 +288,7 @@ export async function renderDentalChartPage(pdf: jsPDF, data: DentalReportData):
       const domePts = toothDomePoints(region.points, isUpperIncisor(region.toothNumber)).map(
         ([x, y]) => [gridX + x * scaleX, cursorY + y * scaleY] as [number, number]
       );
-      const [dr, dg, db] = examined ? hexToRgb(status.hex) : [203, 213, 225];
+      const [dr, dg, db] = examined ? hexToRgb(getOutlineHex(finding?.status ?? 'normal')) : [203, 213, 225];
       pdf.setDrawColor(dr, dg, db);
       pdf.setFillColor(255, 255, 255);
       pdf.setLineWidth(examined ? 0.7 : 0.3);
@@ -317,7 +315,7 @@ export async function renderDentalChartPage(pdf: jsPDF, data: DentalReportData):
     let legendX = margin;
     pdf.setFontSize(7.5);
     for (const entry of legendEntries) {
-      const [r, g, b] = hexToRgb(entry.hex);
+      const [r, g, b] = hexToRgb(getOutlineHex(entry.value));
       pdf.setLineDashPattern([], 0);
       pdf.setDrawColor(r, g, b);
       pdf.setLineWidth(0.9);

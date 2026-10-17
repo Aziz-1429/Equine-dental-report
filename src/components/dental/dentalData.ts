@@ -22,102 +22,79 @@ export const TOOTH_STATUS_OPTIONS: ToothStatusOption[] = [
     value: 'normal',
     label: 'Normal',
     glyph: '✓',
-    strokeClassName: 'stroke-emerald-500',
-    swatchClassName: 'bg-emerald-100 border-emerald-500 text-emerald-700',
-    hex: '#10b981',
   },
   {
     value: 'abnormal',
     label: 'Abnormal',
     glyph: '!',
-    strokeClassName: 'stroke-red-600',
-    swatchClassName: 'bg-red-100 border-red-600 text-red-700',
-    hex: '#dc2626',
   },
   {
     value: 'missing',
     label: 'Missing',
     glyph: '×',
-    strokeClassName: 'stroke-slate-400',
-    swatchClassName: 'bg-slate-200 border-slate-400 text-slate-600',
-    hex: '#94a3b8',
   },
   {
     value: 'extracted',
     label: 'Extracted',
     glyph: '⊘',
-    strokeClassName: 'stroke-slate-500',
-    swatchClassName: 'bg-slate-300 border-slate-500 text-slate-700',
-    hex: '#64748b',
   },
   {
     value: 'fractured',
     label: 'Fractured',
     glyph: '⚡',
-    strokeClassName: 'stroke-orange-600',
-    swatchClassName: 'bg-orange-100 border-orange-600 text-orange-700',
-    hex: '#ea580c',
   },
   {
     value: 'caries',
     label: 'Caries',
     glyph: '●',
-    strokeClassName: 'stroke-amber-600',
-    swatchClassName: 'bg-amber-100 border-amber-600 text-amber-700',
-    hex: '#d97706',
   },
   {
     value: 'periodontal-disease',
     label: 'Periodontal disease',
     glyph: '◆',
-    strokeClassName: 'stroke-rose-600',
-    swatchClassName: 'bg-rose-100 border-rose-600 text-rose-700',
-    hex: '#e11d48',
   },
   {
     value: 'eruption-issue',
     label: 'Eruption issue',
     glyph: '↑',
-    strokeClassName: 'stroke-sky-600',
-    swatchClassName: 'bg-sky-100 border-sky-600 text-sky-700',
-    hex: '#0284c7',
   },
   {
     value: 'malocclusion',
     label: 'Malocclusion (wave/step/ramp)',
     glyph: '~',
-    strokeClassName: 'stroke-violet-600',
-    swatchClassName: 'bg-violet-100 border-violet-600 text-violet-700',
-    hex: '#7c3aed',
   },
   {
     value: 'overgrowth',
     label: 'Overgrowth',
     glyph: '▲',
-    strokeClassName: 'stroke-fuchsia-600',
-    swatchClassName: 'bg-fuchsia-100 border-fuchsia-600 text-fuchsia-700',
-    hex: '#c026d3',
   },
   {
     value: 'painful',
     label: 'Painful',
     glyph: '✦',
-    strokeClassName: 'stroke-red-700',
-    swatchClassName: 'bg-red-200 border-red-700 text-red-800',
-    hex: '#b91c1c',
   },
   {
     value: 'other',
     label: 'Other',
     glyph: '?',
-    strokeClassName: 'stroke-stone-500',
-    swatchClassName: 'bg-stone-100 border-stone-500 text-stone-700',
-    hex: '#78716c',
   },
 ];
 
 export function getStatusOption(status: ToothStatus): ToothStatusOption {
   return TOOTH_STATUS_OPTIONS.find((o) => o.value === status) ?? TOOTH_STATUS_OPTIONS[0];
+}
+
+/** The chart's outline color is deliberately simplified to just two
+ * colors (plus purple for the currently-selected tooth, handled
+ * separately) — green for normal, red for every other status — so the
+ * arcade reads at a glance. The SPECIFIC finding is still visible via
+ * each status's own glyph; only the outline color is binary. */
+export function getOutlineClassName(status: ToothStatus): string {
+  return status === 'normal' ? 'stroke-emerald-500' : 'stroke-red-600';
+}
+
+export function getOutlineHex(status: ToothStatus): string {
+  return status === 'normal' ? '#10b981' : '#dc2626';
 }
 
 /**
@@ -177,29 +154,35 @@ const SIDE_104_111_REGIONS = [
 
 /**
  * Tooth hit-area geometry for the "205–211 / 305–311" reference chart
- * (public/dental-chart/triadan-205-211-side.png, 610×406 — a replacement
- * reference image supplied with every Triadan number already correct,
- * replacing an earlier AI-generated asset that had three mislabeled
- * teeth baked into it (202/305-duplicate/319 instead of 208/209/309)
- * and needed a visual patch-over; this image needs no such correction.
- * Traced directly from the artwork's own pixel boundaries, same method
- * as the 104-111 side.
+ * (public/dental-chart/triadan-205-211-side.png, 1536×1024 — a
+ * full-resolution replacement of the earlier asset, supplied with every
+ * Triadan number already correct). Traced directly from the artwork's
+ * own pixel boundaries, same method as the 104-111 side. 206-211's
+ * crowns are traced as precise contours; the premolars/molars 306-311
+ * use a tight bounding box instead (their root-fork shading reads as a
+ * false interior "wall" to contour tracing, cutting the flood fill off
+ * partway down) — still accurate to the tooth's own left/right/top/
+ * bottom extent and never overlapping a neighbor, just without
+ * cusp-level detail. The canine (204) and its lower counterpart (304)
+ * are real clickable regions here, matching 104/404 on the other side.
  */
 const SIDE_205_211_REGIONS = [
-  { toothNumber: '205', points: '170,290 176,290 180,294 180,314 176,318 170,318 165,314 165,294', labelX: 172, labelY: 304 },
-  { toothNumber: '206', points: '163,195 211,195 211,291 163,291', labelX: 187, labelY: 243 },
-  { toothNumber: '207', points: '212,185 225,185 231,195 237,185 250,185 250,291 212,291', labelX: 231, labelY: 238 },
-  { toothNumber: '208', points: '251,175 285,175 285,291 251,291', labelX: 268, labelY: 233 },
-  { toothNumber: '209', points: '285,180 320,180 320,290 285,290', labelX: 302, labelY: 235 },
-  { toothNumber: '210', points: '320,175 355,175 355,290 320,290', labelX: 337, labelY: 232 },
-  { toothNumber: '211', points: '355,175 390,175 390,290 355,290', labelX: 372, labelY: 232 },
-  { toothNumber: '305', points: '170,322 176,322 180,326 180,340 176,345 170,345 165,340 165,326', labelX: 172, labelY: 333 },
-  { toothNumber: '306', points: '175,298 210,298 210,355 175,355', labelX: 192, labelY: 326 },
-  { toothNumber: '307', points: '210,290 245,290 245,355 210,355', labelX: 227, labelY: 322 },
-  { toothNumber: '308', points: '245,280 278,280 278,350 245,350', labelX: 261, labelY: 315 },
-  { toothNumber: '309', points: '280,283 312,283 312,335 280,335', labelX: 296, labelY: 309 },
-  { toothNumber: '310', points: '312,280 345,280 345,330 312,330', labelX: 328, labelY: 305 },
-  { toothNumber: '311', points: '345,280 378,280 378,320 345,320', labelX: 361, labelY: 300 },
+  { toothNumber: '204', points: '266,690 230,690 231,714 239,712 232,717 232,723 239,744 245,751 253,741 260,705', labelX: 248, labelY: 720 },
+  { toothNumber: '205', points: '383,662 391,662 397,668 397,689 391,695 383,695 377,689 377,668', labelX: 387, labelY: 678 },
+  { toothNumber: '206', points: '487,549 479,548 471,553 460,580 452,587 447,585 445,570 440,566 427,568 421,573 413,610 413,673 448,665 487,663 488,625 494,590 493,561', labelX: 453, labelY: 610 },
+  { toothNumber: '207', points: '571,515 555,544 546,552 537,547 535,533 531,529 523,529 515,535 495,598 495,662 527,656 570,653', labelX: 533, labelY: 588 },
+  { toothNumber: '208', points: '631,475 623,480 605,535 583,571 576,609 574,652 620,647 646,639 646,505 640,499 637,480', labelX: 610, labelY: 563 },
+  { toothNumber: '209', points: '704,476 695,486 680,530 665,557 657,593 654,638 673,633 696,632 719,623 719,506 714,510 707,506 707,489 704,487 707,482', labelX: 686, labelY: 557 },
+  { toothNumber: '210', points: '777,451 769,452 761,465 755,512 738,553 732,620 762,611 794,606 794,473 786,471 782,457', labelX: 763, labelY: 535 },
+  { toothNumber: '211', points: '873,433 868,433 860,442 832,498 812,558 806,604 846,589 861,587 867,582 870,553 868,559 867,553 868,549 872,548 879,522 879,452 875,448', labelX: 842, labelY: 518 },
+  { toothNumber: '304', points: '299,840 261,840 248,847 207,858 231,881 247,888 279,894 281,900 275,904 249,905 224,899 201,886 184,867 168,881 202,899 239,909 238,912 203,916 199,919 299,917', labelX: 233, labelY: 879 },
+  { toothNumber: '305', points: '466,762 474,762 480,768 480,789 474,795 466,795 460,789 460,768', labelX: 470, labelY: 778 },
+  { toothNumber: '306', points: '413,690 481,690 481,834 413,834', labelX: 447, labelY: 762 },
+  { toothNumber: '307', points: '481,700 561,700 561,828 481,828', labelX: 521, labelY: 764 },
+  { toothNumber: '308', points: '561,672 642,672 642,828 561,828', labelX: 601, labelY: 750 },
+  { toothNumber: '309', points: '642,652 720,652 720,815 642,815', labelX: 681, labelY: 733 },
+  { toothNumber: '310', points: '720,636 800,636 800,815 720,815', labelX: 760, labelY: 725 },
+  { toothNumber: '311', points: '800,618 900,618 900,808 800,808', labelX: 850, labelY: 713 },
 ];
 
 /**
@@ -320,8 +303,8 @@ export const DENTAL_CHART_SIDES: DentalChartSide[] = [
     id: '205-211',
     label: 'Left side — Triadan 205–211 / 305–311',
     backgroundSrc: '/dental-chart/triadan-205-211-side.png',
-    viewBoxWidth: 610,
-    viewBoxHeight: 406,
+    viewBoxWidth: 1536,
+    viewBoxHeight: 1024,
     regions: SIDE_205_211_REGIONS,
   },
   {
