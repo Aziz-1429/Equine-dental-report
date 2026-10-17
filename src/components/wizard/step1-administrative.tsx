@@ -6,16 +6,23 @@ import { User, Phone, Mail, MapPin, Calendar } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { DentalReportData } from '@/lib/types';
+import { DentalReportData, COUNTRY_CODES } from '@/lib/types';
 
 export function Step1Administrative() {
-  const { register, formState: { errors } } = useFormContext<DentalReportData>();
+  const { register, watch, setValue, formState: { errors } } = useFormContext<DentalReportData>();
 
   return (
     <div className="space-y-6">
@@ -61,15 +68,32 @@ export function Step1Administrative() {
               <Label htmlFor="phone" className="text-sm font-semibold">
                 Phone
               </Label>
-              <div className="relative">
-                <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <Input
-                  id="phone"
-                  type="tel"
-                  placeholder="(555) 123-4567"
-                  className="h-12 pl-10 text-base"
-                  {...register('phone')}
-                />
+              <div className="flex gap-2">
+                <Select
+                  value={watch('phoneCountryCode')}
+                  onValueChange={(v) => setValue('phoneCountryCode', v)}
+                >
+                  <SelectTrigger className="h-12 w-[108px] shrink-0 text-base">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {COUNTRY_CODES.map((c) => (
+                      <SelectItem key={c.dialCode} value={c.dialCode}>
+                        {c.flag} {c.dialCode}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <div className="relative flex-1">
+                  <Phone className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="501234567"
+                    className="h-12 pl-10 text-base"
+                    {...register('phone')}
+                  />
+                </div>
               </div>
             </div>
 

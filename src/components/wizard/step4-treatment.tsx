@@ -86,7 +86,7 @@ export function Step4Treatment() {
             </div>
             <div>
               <CardTitle className="text-lg">Procedures Performed</CardTitle>
-              <CardDescription>Toggle all treatments carried out today</CardDescription>
+              <CardDescription>Select all procedures performed today</CardDescription>
             </div>
           </div>
         </CardHeader>

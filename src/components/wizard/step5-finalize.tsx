@@ -202,7 +202,7 @@ export function Step5Finalize({ dbId }: { dbId?: string | null }) {
           {checkedTreatments.length > 0 && (
             <div className="space-y-1.5">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Treatments ({checkedTreatments.length})
+                Procedures Performed ({checkedTreatments.length})
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {checkedTreatments.map((t) => (
