@@ -73,6 +73,7 @@ export interface ExamMeasurements {
 export interface DentalReportData {
   // Step 1 — Administrative
   clientName: string;
+  phoneCountryCode: string;
   phone: string;
   email: string;
   stableLocation: string;
@@ -162,6 +163,37 @@ export const FOLLOW_UP_OPTIONS = [
 
 export const SEX_OPTIONS = ['Stallion', 'Gelding', 'Mare', 'Colt', 'Filly'] as const;
 
+export interface CountryCode {
+  dialCode: string;
+  name: string;
+  flag: string;
+}
+
+/** Dial codes for the client phone field, Gulf/Middle East countries
+ * first (the clinic's own region) followed by other common ones. */
+export const COUNTRY_CODES: CountryCode[] = [
+  { dialCode: '+966', name: 'Saudi Arabia', flag: '🇸🇦' },
+  { dialCode: '+971', name: 'United Arab Emirates', flag: '🇦🇪' },
+  { dialCode: '+965', name: 'Kuwait', flag: '🇰🇼' },
+  { dialCode: '+973', name: 'Bahrain', flag: '🇧🇭' },
+  { dialCode: '+974', name: 'Qatar', flag: '🇶🇦' },
+  { dialCode: '+968', name: 'Oman', flag: '🇴🇲' },
+  { dialCode: '+20', name: 'Egypt', flag: '🇪🇬' },
+  { dialCode: '+962', name: 'Jordan', flag: '🇯🇴' },
+  { dialCode: '+961', name: 'Lebanon', flag: '🇱🇧' },
+  { dialCode: '+964', name: 'Iraq', flag: '🇮🇶' },
+  { dialCode: '+1', name: 'United States / Canada', flag: '🇺🇸' },
+  { dialCode: '+44', name: 'United Kingdom', flag: '🇬🇧' },
+  { dialCode: '+33', name: 'France', flag: '🇫🇷' },
+  { dialCode: '+49', name: 'Germany', flag: '🇩🇪' },
+  { dialCode: '+39', name: 'Italy', flag: '🇮🇹' },
+  { dialCode: '+34', name: 'Spain', flag: '🇪🇸' },
+  { dialCode: '+91', name: 'India', flag: '🇮🇳' },
+  { dialCode: '+92', name: 'Pakistan', flag: '🇵🇰' },
+  { dialCode: '+63', name: 'Philippines', flag: '🇵🇭' },
+  { dialCode: '+61', name: 'Australia', flag: '🇦🇺' },
+] as const;
+
 export const LATERAL_EXCURSION_OPTIONS: LateralExcursion[] = ['Smooth', 'Step', 'Mouth opens to slide'];
 export const ROSTROCAUDAL_EXCURSION_OPTIONS: RostrocaudalExcursion[] = ['Normal', 'Reduced', 'Painful'];
 export const TABLE_ANGLE_OPTIONS: TableAngle[] = ['Normal', 'Flat', 'Steep', 'Excessive'];
@@ -245,6 +277,7 @@ export function createInitialExamMeasurements(): ExamMeasurements {
 export function createInitialReport(): DentalReportData {
   return {
     clientName: '',
+    phoneCountryCode: '+966',
     phone: '',
     email: '',
     stableLocation: '',
