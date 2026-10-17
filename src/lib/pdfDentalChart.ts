@@ -238,12 +238,32 @@ export async function renderDentalChartPage(pdf: jsPDF, data: DentalReportData):
 
     const scaleX = halfWidth / side.viewBoxWidth;
     const scaleY = imgDisplayHeight / side.viewBoxHeight;
+
+    // The reference artwork itself prints a few wrong Triadan numbers
+    // (a generation artifact) — patched over here rather than touching
+    // the source image.
+    for (const c of side.labelCorrections ?? []) {
+      const px = x + c.x * scaleX;
+      const py = imgY + c.y * scaleY;
+      const pw = c.width * scaleX;
+      const ph = c.height * scaleY;
+      pdf.setFillColor(250, 250, 250);
+      pdf.rect(px, py, pw, ph, 'F');
+      pdf.setFont('helvetica', 'bold');
+      // jsPDF's setFontSize takes points, not the document's mm units —
+      // ph is in mm, so this converts (1mm ≈ 2.83pt) and scales down to
+      // comfortably fit the patch's height.
+      pdf.setFontSize(ph * 2.2);
+      pdf.setTextColor(30, 41, 59);
+      pdf.text(c.correctLabel, px + pw / 2, py + ph / 2 + ph * 0.12, { align: 'center' });
+    }
+
     for (const region of side.regions) {
       const finding = data.teeth[region.toothNumber];
       if (!finding?.examined) continue;
       const status = getStatusOption(finding.status);
       const dashed = finding.status === 'missing' || finding.status === 'extracted';
-      drawToothOutline(pdf, region.points, x, imgY, scaleX, scaleY, status.hex, dashed, 0.8);
+      drawToothOutline(pdf, region.points, x, imgY, scaleX, scaleY, status.hex, dashed, 0.15);
     }
     maxImgBottom = Math.max(maxImgBottom, imgY + imgDisplayHeight);
   }

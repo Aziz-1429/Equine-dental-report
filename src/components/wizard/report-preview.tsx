@@ -285,6 +285,7 @@ export function ReportPreview({ data }: { data: DentalReportData }) {
   const checkedSoftTissue = data.softTissue.filter((s) => s.checked);
   const checkedTreatments = data.treatments.filter((t) => t.checked);
   const activeDrugs = data.sedationDrugs.filter((d) => d.drug);
+  const activeBlocks = data.nerveBlocks.filter((b) => b.block);
 
   const formattedDate = data.examDate
     ? new Date(data.examDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
@@ -336,6 +337,14 @@ export function ReportPreview({ data }: { data: DentalReportData }) {
         </div>
       </div>
 
+      {/* History */}
+      {data.history.length > 0 && (
+        <div data-pdf-section style={sectionStyle}>
+          <SectionTitle>History</SectionTitle>
+          <div>{data.history.map((h) => <Tag key={h} label={h} color="amber" />)}</div>
+        </div>
+      )}
+
       {/* Sedation */}
       {data.sedationUsed && activeDrugs.length > 0 && (
         <div data-pdf-section style={sectionStyle}>
@@ -345,6 +354,21 @@ export function ReportPreview({ data }: { data: DentalReportData }) {
               <FieldBox label={`Drug ${activeDrugs.length > 1 ? `#${idx + 1}` : ''}`} value={d.drug} />
               <FieldBox label="Dose" value={d.dose} />
               <FieldBox label="Time" value={d.time} />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Nerve Block */}
+      {data.nerveBlockUsed && activeBlocks.length > 0 && (
+        <div data-pdf-section style={sectionStyle}>
+          <SectionTitle>Nerve Block</SectionTitle>
+          {activeBlocks.map((b, idx) => (
+            <div key={b.id} style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+              <FieldBox label={`Block ${activeBlocks.length > 1 ? `#${idx + 1}` : ''}`} value={b.block} />
+              <FieldBox label="Drug" value={b.drug} />
+              <FieldBox label="Dose" value={b.dose} />
+              <FieldBox label="Time" value={b.time} />
             </div>
           ))}
         </div>

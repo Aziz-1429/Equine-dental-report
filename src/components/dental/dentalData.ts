@@ -216,6 +216,17 @@ const SIDE_205_211_REGIONS = [
   { toothNumber: '311', points: '883,690 851,714 819,731 861,799 882,823 889,825 892,819 884,805 888,795 905,783 926,792 935,791 938,785 908,753 899,733 887,690', labelX: 878, labelY: 757 },
 ];
 
+/** The three mislabeled teeth plus the mislabeled upper-canine landmark
+ * described in the comment above — visually patched over with the
+ * correct Triadan number, in both the web chart and the native PDF
+ * chart, since the wrong digits are baked into the raster itself. */
+const SIDE_205_211_LABEL_CORRECTIONS = [
+  { x: 595, y: 575, width: 90, height: 50, correctLabel: '208' },
+  { x: 595, y: 785, width: 95, height: 45, correctLabel: '308' },
+  { x: 680, y: 752, width: 95, height: 45, correctLabel: '309' },
+  { x: 215, y: 690, width: 100, height: 65, correctLabel: '204' },
+];
+
 /**
  * Incisors (101–103, 201–203, 301–303, 401–403) have no photographic
  * reference — neither supplied chart image shows them, both are
@@ -337,6 +348,7 @@ export const DENTAL_CHART_SIDES: DentalChartSide[] = [
     viewBoxWidth: 1536,
     viewBoxHeight: 1024,
     regions: SIDE_205_211_REGIONS,
+    labelCorrections: SIDE_205_211_LABEL_CORRECTIONS,
   },
   {
     id: 'incisors',
