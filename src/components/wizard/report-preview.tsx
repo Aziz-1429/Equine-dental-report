@@ -316,7 +316,7 @@ export function ReportPreview({ data }: { data: DentalReportData }) {
         <SectionTitle>Client &amp; Administrative Information</SectionTitle>
         <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between' }}>
           <FieldBox label="Owner" value={data.clientName} />
-          <FieldBox label="Phone" value={data.phone} />
+          <FieldBox label="Phone" value={data.phone ? `${data.phoneCountryCode} ${data.phone}` : ''} />
           <FieldBox label="Address" value={data.stableLocation} />
           <FieldBox label="Date" value={formattedDate} />
           <FieldBox label="Email" value={data.email} />
