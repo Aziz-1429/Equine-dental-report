@@ -75,6 +75,20 @@ export interface ToothRegion {
   labelY: number;
 }
 
+/** A spot where the reference image's own printed Triadan number is
+ * wrong — covers it with a plain patch and draws the correct number in
+ * its place, in both the web chart and the native PDF chart. */
+export interface LabelCorrection {
+  /** Bounding box of the printed (wrong) number to cover, in the
+   * image's own coordinate space. */
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  /** The correct Triadan number to draw centered in that box. */
+  correctLabel: string;
+}
+
 /** One anatomical side/quadrant-pair of the chart (its background image
  * plus the tooth regions traced against it). Lets a second side be added
  * later without touching chart logic. */
@@ -85,4 +99,7 @@ export interface DentalChartSide {
   viewBoxWidth: number;
   viewBoxHeight: number;
   regions: ToothRegion[];
+  /** Mislabeled numbers baked into the reference artwork itself (a
+   * generation artifact in the source image), patched over visually. */
+  labelCorrections?: LabelCorrection[];
 }

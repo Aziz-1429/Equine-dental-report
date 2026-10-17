@@ -32,6 +32,14 @@ export interface SedationEntry {
   time: string;
 }
 
+export interface NerveBlockEntry {
+  id: string;
+  block: string;
+  drug: string;
+  dose: string;
+  time: string;
+}
+
 export type LateralExcursion = 'Smooth' | 'Step' | 'Mouth opens to slide' | '';
 export type RostrocaudalExcursion = 'Normal' | 'Reduced' | 'Painful' | '';
 export type TableAngle = 'Normal' | 'Flat' | 'Steep' | 'Excessive' | '';
@@ -80,8 +88,11 @@ export interface DentalReportData {
   sex: string;
   bodyConditionScore: string;
   color: string;
+  history: string[];
   sedationUsed: boolean;
   sedationDrugs: SedationEntry[];
+  nerveBlockUsed: boolean;
+  nerveBlocks: NerveBlockEntry[];
 
   // Step 3 — Charting
   teeth: Record<string, ToothFinding>;
@@ -106,6 +117,20 @@ export interface DentalReportData {
 export const SEDATION_DRUGS = [
   'Detomidine', 'Xylazine', 'Butorphanol', 'Acepromazine',
   'Romifidine', 'Diazepam', 'Ketamine',
+] as const;
+
+export const HISTORY_OPTIONS = [
+  'Weight loss', 'Dropping feed', 'Quidding', 'Head tossing',
+  'Nasal discharge', 'Foul odor (halitosis)', 'Facial swelling',
+  'Reluctance to chew', 'Bit resistance', 'Excessive salivation',
+] as const;
+
+export const NERVE_BLOCK_OPTIONS = [
+  'Mental nerve', 'Mandibular', 'Maxillary', 'Infraorbital', 'Local block',
+] as const;
+
+export const LOCAL_ANESTHETIC_DRUGS = [
+  'Lidocaine', 'Mepivacaine', 'Bupivacaine',
 ] as const;
 
 export const HORSE_COLOR_OPTIONS = [
@@ -198,6 +223,10 @@ export function createInitialSedationDrugs(): SedationEntry[] {
   return [{ id: 'sed-0', drug: '', dose: '', time: '' }];
 }
 
+export function createInitialNerveBlocks(): NerveBlockEntry[] {
+  return [{ id: 'block-0', block: '', drug: 'Lidocaine', dose: '', time: '' }];
+}
+
 function createEmptyExcursionAssessment(): ExcursionAssessment {
   return { excursion: '', postDentalExcursion: '', percentOcclusion: '', postDentalPercentOcclusion: '' };
 }
@@ -234,8 +263,11 @@ export function createInitialReport(): DentalReportData {
     sex: '',
     bodyConditionScore: '',
     color: '',
+    history: [],
     sedationUsed: false,
     sedationDrugs: createInitialSedationDrugs(),
+    nerveBlockUsed: false,
+    nerveBlocks: createInitialNerveBlocks(),
     teeth: createInitialTeeth(),
     pathologies: createInitialPathologies(),
     softTissue: createInitialSoftTissue(),

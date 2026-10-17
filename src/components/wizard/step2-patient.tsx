@@ -1,7 +1,7 @@
 'use client';
 
 import { useFormContext, useFieldArray } from 'react-hook-form';
-import { Heart, Syringe, Plus, Trash2 } from 'lucide-react';
+import { Heart, Syringe, Plus, Trash2, ClipboardList, Activity, ChevronDown } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,7 +28,43 @@ import {
   BCS_OPTIONS,
   HORSE_COLOR_OPTIONS,
   SEDATION_DRUGS,
+  HISTORY_OPTIONS,
+  NERVE_BLOCK_OPTIONS,
+  LOCAL_ANESTHETIC_DRUGS,
 } from '@/lib/types';
+
+function HistoryDropdown({ value, onChange }: { value: string[]; onChange: (next: string[]) => void }) {
+  const toggle = (option: string) => {
+    onChange(value.includes(option) ? value.filter((v) => v !== option) : [...value, option]);
+  };
+
+  return (
+    <details className="group rounded-lg border border-slate-200 dark:border-slate-700">
+      <summary className="flex h-12 cursor-pointer list-none items-center justify-between rounded-lg px-4 text-base text-slate-700 dark:text-slate-300 [&::-webkit-details-marker]:hidden">
+        <span className={value.length === 0 ? 'text-slate-400' : ''}>
+          {value.length === 0 ? 'Select presenting signs' : `${value.length} selected`}
+        </span>
+        <ChevronDown className="h-4 w-4 shrink-0 text-slate-400 transition-transform group-open:rotate-180" />
+      </summary>
+      <div className="space-y-1 border-t border-slate-200 p-2 dark:border-slate-700">
+        {HISTORY_OPTIONS.map((option) => (
+          <label
+            key={option}
+            className="flex items-center gap-2.5 rounded-md p-2 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
+          >
+            <input
+              type="checkbox"
+              checked={value.includes(option)}
+              onChange={() => toggle(option)}
+              className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary"
+            />
+            {option}
+          </label>
+        ))}
+      </div>
+    </details>
+  );
+}
 
 export function Step2Patient() {
   const {
@@ -40,6 +76,8 @@ export function Step2Patient() {
   } = useFormContext<DentalReportData>();
 
   const sedationUsed = watch('sedationUsed');
+  const nerveBlockUsed = watch('nerveBlockUsed');
+  const history = watch('history');
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -48,6 +86,19 @@ export function Step2Patient() {
 
   const addDrug = () => {
     append({ id: `sed-${Date.now()}`, drug: '', dose: '', time: '' });
+  };
+
+  const {
+    fields: blockFields,
+    append: appendBlock,
+    remove: removeBlock,
+  } = useFieldArray({
+    control,
+    name: 'nerveBlocks',
+  });
+
+  const addBlock = () => {
+    appendBlock({ id: `block-${Date.now()}`, block: '', drug: 'Lidocaine', dose: '', time: '' });
   };
 
   return (
@@ -205,6 +256,23 @@ export function Step2Patient() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-primary">
+              <ClipboardList className="h-4 w-4" />
+            </div>
+            <div>
+              <CardTitle className="text-lg">History</CardTitle>
+              <CardDescription>Presenting signs reported by the owner</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <HistoryDropdown value={history} onChange={(next) => setValue('history', next)} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-primary">
               <Syringe className="h-4 w-4" />
             </div>
             <div>
@@ -313,6 +381,142 @@ export function Step2Patient() {
                 className="w-full touch-target"
               >
                 <Plus className="mr-1.5 h-4 w-4" /> Add Another Drug
+              </Button>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-primary">
+              <Activity className="h-4 w-4" />
+            </div>
+            <div>
+              <CardTitle className="text-lg">Nerve Block</CardTitle>
+              <CardDescription>Local anesthesia administered for the examination</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-5">
+          <button
+            type="button"
+            onClick={() => setValue('nerveBlockUsed', !nerveBlockUsed)}
+            className={cn(
+              'flex w-full items-center justify-between rounded-lg border-2 p-4 text-left transition-all touch-target',
+              nerveBlockUsed
+                ? 'border-primary bg-primary/5'
+                : 'border-slate-200 bg-white dark:border-slate-700 dark:bg-slate-900'
+            )}
+          >
+            <div>
+              <p className="text-sm font-semibold text-slate-900 dark:text-white">
+                Nerve block used during exam
+              </p>
+              <p className="text-xs text-slate-500">Toggle on if a local block was performed</p>
+            </div>
+            <div
+              className={cn(
+                'relative h-7 w-12 shrink-0 rounded-full transition-colors',
+                nerveBlockUsed ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-700'
+              )}
+            >
+              <div
+                className={cn(
+                  'absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform',
+                  nerveBlockUsed ? 'translate-x-5' : 'translate-x-0.5'
+                )}
+              />
+            </div>
+          </button>
+
+          {nerveBlockUsed && (
+            <div className="space-y-4">
+              {blockFields.map((field, idx) => (
+                <div
+                  key={field.id}
+                  className="space-y-3 rounded-lg border border-slate-200 p-4 dark:border-slate-800"
+                >
+                  <div className="flex items-center justify-between">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Block {idx + 1}
+                    </p>
+                    {blockFields.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeBlock(idx)}
+                        className="h-8 text-slate-400 hover:text-destructive"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">Block Type</Label>
+                      <Select
+                        value={watch(`nerveBlocks.${idx}.block`)}
+                        onValueChange={(v) => setValue(`nerveBlocks.${idx}.block`, v)}
+                      >
+                        <SelectTrigger className="h-11 text-sm">
+                          <SelectValue placeholder="Select block" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {NERVE_BLOCK_OPTIONS.map((b) => (
+                            <SelectItem key={b} value={b}>
+                              {b}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">Drug</Label>
+                      <Select
+                        value={watch(`nerveBlocks.${idx}.drug`)}
+                        onValueChange={(v) => setValue(`nerveBlocks.${idx}.drug`, v)}
+                      >
+                        <SelectTrigger className="h-11 text-sm">
+                          <SelectValue placeholder="Select drug" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {LOCAL_ANESTHETIC_DRUGS.map((d) => (
+                            <SelectItem key={d} value={d}>
+                              {d}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">Dose</Label>
+                      <Input
+                        placeholder="e.g. 2 mL"
+                        className="h-11 text-sm"
+                        {...register(`nerveBlocks.${idx}.dose`)}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">Time</Label>
+                      <Input
+                        type="time"
+                        className="h-11 text-sm"
+                        {...register(`nerveBlocks.${idx}.time`)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+              <Button
+                type="button"
+                variant="outline"
+                onClick={addBlock}
+                className="w-full touch-target"
+              >
+                <Plus className="mr-1.5 h-4 w-4" /> Add Another Block
               </Button>
             </div>
           )}
