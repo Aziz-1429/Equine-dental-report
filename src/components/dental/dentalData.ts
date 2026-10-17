@@ -123,18 +123,20 @@ export const TOOTH_SEVERITY_OPTIONS = ['Mild', 'Moderate', 'Severe'] as const;
  * asset supplied, an AI-generated raster wrapped in an SVG <image> tag
  * with no real vector paths of its own).
  *
- * Traced directly from the artwork's own pixel boundaries (flood-filled
- * from inside each tooth's drawn outline, contour-extracted, then
- * simplified) rather than hand-eyeballed, so each hit area hugs its
- * tooth's actual silhouette instead of an approximate box. A handful of
- * teeth whose boundary gap connects to open background (111/110/109/409
- * and the row-end molars) were corrected by direct pixel-grid reading
- * against the source image instead, since flood fill alone couldn't
- * resolve them. Tooth 105/104/404 are small, thin shapes in the source
- * image; their hit areas stay close to the visible outline.
+ * Traced directly from the artwork's own pixel boundaries: a grayscale
+ * wall mask (outline strokes = walls), connected-component flood fill
+ * from a seed inside each tooth, then contour-extracted and simplified.
+ * The lower arcade (404-411) was fully re-verified and re-traced in this
+ * pass after a pairwise polygon-overlap check turned up real bugs: 405
+ * had been placed over 406's crown instead of its own small distal oval,
+ * and 409/410's prior coordinates overlapped each other by ~25% of their
+ * area. All eight lower teeth now have zero overlap with one another,
+ * confirmed by computing every pairwise intersection area. 111's label
+ * position (not its hit-area shape) was also corrected — it previously
+ * fell outside its own polygon.
  */
 const SIDE_104_111_REGIONS = [
-  { toothNumber: '111', points: '599,401 598,416 623,455 639,495 646,543 651,544 650,547 646,547 648,570 655,579 667,584 667,447 647,407 641,404 634,420 625,423 606,403', labelX: 632, labelY: 492 },
+  { toothNumber: '111', points: '599,401 598,416 623,455 639,495 646,543 651,544 650,547 646,547 648,570 655,579 667,584 667,447 647,407 641,404 634,420 625,423 606,403', labelX: 649, labelY: 475 },
   { toothNumber: '110', points: '684,408 703,541 700,541 669,452 669,585 682,589 692,604 704,604 704,558 708,569 709,603 721,614 743,615 764,623 767,543 747,482 737,417 728,411 716,431 708,433 693,412', labelX: 718, labelY: 515 },
   { toothNumber: '109', points: '798,433 792,444 788,470 780,469 772,454 772,540 781,531 772,565 774,622 786,631 815,628 832,636 836,591 823,586 837,586 835,556 829,524 810,482', labelX: 804, labelY: 534 },
   { toothNumber: '108', points: '821,441 842,568 839,634 855,649 881,647 902,653 898,537 892,511 869,473 864,435 854,441 849,458 841,458', labelX: 865, labelY: 553 },
@@ -142,14 +144,14 @@ const SIDE_104_111_REGIONS = [
   { toothNumber: '106', points: '995,496 984,507 989,572 986,656 1000,665 1041,666 1049,656 1049,619 1056,590 1055,522 1046,506 1030,501 1029,518 1024,523 1015,523 1009,518 1002,498', labelX: 1020, labelY: 585 },
   { toothNumber: '105', points: '1062,633 1061,643 1060,653 1064,655 1066,654 1069,650 1072,645 1073,636 1072,635 1068,634 1065,633', labelX: 1066, labelY: 643 },
   { toothNumber: '104', points: '1211,624 1209,629 1214,639 1249,675 1257,686 1259,693 1276,700 1279,690 1278,675 1266,653 1250,637 1241,631 1220,623', labelX: 1248, labelY: 658 },
-  { toothNumber: '411', points: '641,606 633,608 600,694 575,719 586,724 598,717 608,717 625,729 623,756 633,755 647,743 702,649 695,640 657,621', labelX: 643, labelY: 678 },
-  { toothNumber: '410', points: '714,643 706,649 667,758 667,776 671,779 688,757 696,757 698,788 717,776 736,753 759,708 768,676 768,666 762,659 732,653', labelX: 718, labelY: 712 },
-  { toothNumber: '409', points: '748,618 790,600 825,600 820,650 810,700 800,740 800,790 765,755 730,785 718,740 715,700 725,660', labelX: 770, labelY: 695 },
-  { toothNumber: '408', points: '848,675 843,679 840,690 834,761 826,798 830,801 841,789 849,789 859,808 887,755 895,730 898,701 894,684', labelX: 862, labelY: 735 },
-  { toothNumber: '407', points: '908,684 903,687 907,727 897,790 902,800 911,805 923,788 932,788 937,805 942,807 951,796 961,764 968,726 969,696 959,687 932,688', labelX: 933, labelY: 741 },
-  { toothNumber: '406', points: '980,688 975,697 991,801 997,809 1004,792 1005,771 1013,762 1025,763 1032,794 1039,784 1044,756 1037,720 1038,699 1025,691', labelX: 1009, labelY: 736 },
-  { toothNumber: '405', points: '976,692 975,697 976,712 1021,713 1037,711 1038,699 1034,694 1030,692 999,691 985,688 980,688', labelX: 1005, labelY: 702 },
-  { toothNumber: '404', points: '1288,817 1273,812 1268,819 1255,830 1237,835 1201,840 1214,843 1230,843 1253,838 1277,829 1286,822', labelX: 1254, labelY: 830 },
+  { toothNumber: '411', points: '631,629 614,668 607,672 607,681 597,696 574,720 580,725 615,725 621,737 620,755 615,762 619,771 628,769 662,730 680,701 695,669 691,663 664,651', labelX: 638, labelY: 698 },
+  { toothNumber: '410', points: '702,668 702,680 695,705 688,714 688,724 684,728 683,738 668,767 666,784 671,789 691,766 700,766 702,780 695,794 705,800 726,780 743,757 764,717 773,689 742,682', labelX: 720, labelY: 733 },
+  { toothNumber: '409', points: '782,692 775,730 770,735 766,763 762,766 761,777 757,780 749,802 753,808 761,805 780,780 788,780 791,799 786,811 793,815 811,799 829,767 842,732 842,721 845,720 847,706', labelX: 802, labelY: 749 },
+  { toothNumber: '408', points: '861,680 854,690 849,740 836,817 839,822 843,822 858,806 866,806 869,826 876,827 891,807 909,765 918,730 921,698 917,691 907,686 884,687 869,680', labelX: 880, labelY: 752 },
+  { toothNumber: '407', points: '936,690 924,698 915,821 919,828 925,828 939,808 948,808 952,830 959,834 966,828 975,811 987,777 996,729 996,704 992,698 983,694 954,695', labelX: 956, labelY: 753 },
+  { toothNumber: '406', points: '1055,696 1028,698 1013,695 1005,698 1000,704 999,721 1008,795 1014,825 1020,836 1024,836 1029,829 1039,792 1049,794 1058,821 1066,817 1070,807 1075,779 1070,714 1067,703', labelX: 1038, labelY: 750 },
+  { toothNumber: '405', points: '1087,731 1088,750 1092,755 1098,755 1105,740 1100,735', labelX: 1095, labelY: 745 },
+  { toothNumber: '404', points: '1322,834 1304,828 1290,841 1271,852 1249,858 1230,859 1227,862 1246,868 1281,865 1306,853 1318,842', labelX: 1296, labelY: 847 },
 ];
 
 /**
@@ -157,14 +159,18 @@ const SIDE_104_111_REGIONS = [
  * (public/dental-chart/triadan-205-211-side.png, 1536×1024 — a
  * full-resolution replacement of the earlier asset, supplied with every
  * Triadan number already correct). Traced directly from the artwork's
- * own pixel boundaries, same method as the 104-111 side. 206-211's
- * crowns are traced as precise contours; the premolars/molars 306-311
- * use a tight bounding box instead (their root-fork shading reads as a
- * false interior "wall" to contour tracing, cutting the flood fill off
- * partway down) — still accurate to the tooth's own left/right/top/
- * bottom extent and never overlapping a neighbor, just without
- * cusp-level detail. The canine (204) and its lower counterpart (304)
- * are real clickable regions here, matching 104/404 on the other side.
+ * own pixel boundaries, same wall-mask flood-fill method as the 104-111
+ * side. 306-311's root-fork shading used to read as a false interior
+ * "wall" to naive contour tracing, cutting the fill off partway down —
+ * fixed in this pass by closing that false gap morphologically before
+ * tracing, so 306-311 are now precise full-tooth contours (crown and
+ * both root prongs), not bounding boxes. 305 (the small wolf-tooth oval)
+ * had also been mistraced on top of 306's own crown; it's now at its
+ * real, separate location forward of 306, matching the artwork. The
+ * canine (204) and its lower counterpart (304) are real clickable
+ * regions here, matching 104/404 on the other side. Every pairwise
+ * polygon intersection across all 16 teeth on this side was checked and
+ * is zero.
  */
 const SIDE_205_211_REGIONS = [
   { toothNumber: '204', points: '266,690 230,690 231,714 239,712 232,717 232,723 239,744 245,751 253,741 260,705', labelX: 248, labelY: 720 },
@@ -176,13 +182,13 @@ const SIDE_205_211_REGIONS = [
   { toothNumber: '210', points: '777,451 769,452 761,465 755,512 738,553 732,620 762,611 794,606 794,473 786,471 782,457', labelX: 763, labelY: 535 },
   { toothNumber: '211', points: '873,433 868,433 860,442 832,498 812,558 806,604 846,589 861,587 867,582 870,553 868,559 867,553 868,549 872,548 879,522 879,452 875,448', labelX: 842, labelY: 518 },
   { toothNumber: '304', points: '299,840 261,840 248,847 207,858 231,881 247,888 279,894 281,900 275,904 249,905 224,899 201,886 184,867 168,881 202,899 239,909 238,912 203,916 199,919 299,917', labelX: 233, labelY: 879 },
-  { toothNumber: '305', points: '466,762 474,762 480,768 480,789 474,795 466,795 460,789 460,768', labelX: 470, labelY: 778 },
-  { toothNumber: '306', points: '413,690 481,690 481,834 413,834', labelX: 447, labelY: 762 },
-  { toothNumber: '307', points: '481,700 561,700 561,828 481,828', labelX: 521, labelY: 764 },
-  { toothNumber: '308', points: '561,672 642,672 642,828 561,828', labelX: 601, labelY: 750 },
-  { toothNumber: '309', points: '642,652 720,652 720,815 642,815', labelX: 681, labelY: 733 },
-  { toothNumber: '310', points: '720,636 800,636 800,815 720,815', labelX: 760, labelY: 725 },
-  { toothNumber: '311', points: '800,618 900,618 900,808 800,808', labelX: 850, labelY: 713 },
+  { toothNumber: '305', points: '396,756 389,759 384,773 385,788 392,796 399,793 402,783 402,765', labelX: 393, labelY: 778 },
+  { toothNumber: '306', points: '425,741 415,749 412,774 414,822 421,848 428,861 437,864 444,840 457,839 465,870 471,879 477,880 484,871 492,836 492,746 482,738 459,742', labelX: 452, labelY: 798 },
+  { toothNumber: '307', points: '562,732 541,736 511,735 500,740 495,748 508,824 521,857 536,875 543,873 547,859 561,859 571,871 578,871 583,866 572,742', labelX: 539, labelY: 786 },
+  { toothNumber: '308', points: '638,721 615,728 589,728 575,738 578,780 590,824 610,862 625,874 631,869 633,857 647,857 660,869 669,869 673,865 657,803 648,728', labelX: 618, labelY: 792 },
+  { toothNumber: '309', points: '711,708 689,715 665,715 652,726 658,771 672,813 691,846 707,863 715,858 715,830 729,830 753,854 760,850 759,840 749,829 748,818 730,774 727,741 721,734 723,714', labelX: 702, labelY: 794 },
+  { toothNumber: '310', points: '734,705 727,716 737,757 754,793 777,825 811,853 818,842 818,824 832,824 849,837 853,833 852,826 829,784 814,742 811,720 804,715 799,695 789,689 766,700', labelX: 784, labelY: 770 },
+  { toothNumber: '311', points: '884,674 857,693 814,714 828,744 852,781 883,815 898,820 899,812 894,803 897,777 915,775 927,782 938,783 941,775 914,744 912,733 906,731 904,717 895,707', labelX: 883, labelY: 760 },
 ];
 
 /**
