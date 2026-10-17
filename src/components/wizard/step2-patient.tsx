@@ -85,7 +85,7 @@ export function Step2Patient() {
   });
 
   const addDrug = () => {
-    append({ id: `sed-${Date.now()}`, drug: '', dose: '', time: '' });
+    append({ id: `sed-${Date.now()}`, drug: '', dose: '' });
   };
 
   const {
@@ -98,7 +98,7 @@ export function Step2Patient() {
   });
 
   const addBlock = () => {
-    appendBlock({ id: `block-${Date.now()}`, block: '', drug: 'Lidocaine', dose: '', time: '' });
+    appendBlock({ id: `block-${Date.now()}`, block: '', drug: 'Lidocaine', dose: '' });
   };
 
   return (
@@ -336,7 +336,7 @@ export function Step2Patient() {
                       </Button>
                     )}
                   </div>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div className="space-y-1.5">
                       <Label className="text-xs font-medium">Drug</Label>
                       <Select
@@ -361,14 +361,6 @@ export function Step2Patient() {
                         placeholder="e.g. 0.5 mL"
                         className="h-11 text-sm"
                         {...register(`sedationDrugs.${idx}.dose`)}
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-medium">Time</Label>
-                      <Input
-                        type="time"
-                        className="h-11 text-sm"
-                        {...register(`sedationDrugs.${idx}.time`)}
                       />
                     </div>
                   </div>
@@ -454,7 +446,7 @@ export function Step2Patient() {
                       </Button>
                     )}
                   </div>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                     <div className="space-y-1.5">
                       <Label className="text-xs font-medium">Block Type</Label>
                       <Select
@@ -497,14 +489,6 @@ export function Step2Patient() {
                         placeholder="e.g. 2 mL"
                         className="h-11 text-sm"
                         {...register(`nerveBlocks.${idx}.dose`)}
-                      />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-medium">Time</Label>
-                      <Input
-                        type="time"
-                        className="h-11 text-sm"
-                        {...register(`nerveBlocks.${idx}.time`)}
                       />
                     </div>
                   </div>

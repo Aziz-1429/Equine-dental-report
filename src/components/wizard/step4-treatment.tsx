@@ -1,7 +1,7 @@
 'use client';
 
 import { useFormContext } from 'react-hook-form';
-import { Stethoscope, CalendarClock, ClipboardList } from 'lucide-react';
+import { Stethoscope, CalendarClock, ClipboardList, ChevronDown } from 'lucide-react';
 
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -18,8 +18,44 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
-import { DentalReportData, FOLLOW_UP_OPTIONS } from '@/lib/types';
+import { DentalReportData, FOLLOW_UP_OPTIONS, TreatmentPerformed } from '@/lib/types';
+
+function ProceduresDropdown({
+  treatments,
+  onToggle,
+}: {
+  treatments: TreatmentPerformed[];
+  onToggle: (idx: number) => void;
+}) {
+  const checkedCount = treatments.filter((t) => t.checked).length;
+
+  return (
+    <details className="group rounded-lg border border-slate-200 dark:border-slate-700">
+      <summary className="flex h-12 cursor-pointer list-none items-center justify-between rounded-lg px-4 text-base text-slate-700 dark:text-slate-300 [&::-webkit-details-marker]:hidden">
+        <span className={checkedCount === 0 ? 'text-slate-400' : ''}>
+          {checkedCount === 0 ? 'Select procedures performed' : `${checkedCount} selected`}
+        </span>
+        <ChevronDown className="h-4 w-4 shrink-0 text-slate-400 transition-transform group-open:rotate-180" />
+      </summary>
+      <div className="grid grid-cols-1 gap-1 border-t border-slate-200 p-2 sm:grid-cols-2 dark:border-slate-700">
+        {treatments.map((t, idx) => (
+          <label
+            key={t.id}
+            className="flex items-center gap-2.5 rounded-md p-2 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
+          >
+            <input
+              type="checkbox"
+              checked={t.checked}
+              onChange={() => onToggle(idx)}
+              className="h-4 w-4 rounded border-slate-300 text-primary focus:ring-primary"
+            />
+            {t.label}
+          </label>
+        ))}
+      </div>
+    </details>
+  );
+}
 
 export function Step4Treatment() {
   const { watch, setValue, register } = useFormContext<DentalReportData>();
@@ -55,37 +91,7 @@ export function Step4Treatment() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            {treatments.map((t, idx) => (
-              <button
-                key={t.id}
-                type="button"
-                onClick={() => toggleTreatment(idx)}
-                className={cn(
-                  'flex items-center gap-2 rounded-lg border-2 p-3 text-left text-sm font-medium transition-all active:scale-95 touch-target',
-                  t.checked
-                    ? 'border-primary bg-primary/5 text-primary'
-                    : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400'
-                )}
-              >
-                <div
-                  className={cn(
-                    'flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-2 transition-colors',
-                    t.checked
-                      ? 'border-primary bg-primary text-primary-foreground'
-                      : 'border-slate-300 dark:border-slate-600'
-                  )}
-                >
-                  {t.checked && (
-                    <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                  )}
-                </div>
-                <span className="leading-tight">{t.label}</span>
-              </button>
-            ))}
-          </div>
+          <ProceduresDropdown treatments={treatments} onToggle={toggleTreatment} />
         </CardContent>
       </Card>
 

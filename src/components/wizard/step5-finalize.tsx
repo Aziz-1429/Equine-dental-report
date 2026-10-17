@@ -1,11 +1,9 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import { useFormContext } from 'react-hook-form';
-import { FileCheck, Download, Eye, User, Building2, Award } from 'lucide-react';
+import { Download, Eye } from 'lucide-react';
 
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -16,17 +14,14 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { SignaturePad } from './signature-pad';
 import { ReportPreview } from './report-preview';
 import { DentalReportData } from '@/lib/types';
 import { saveReport } from '@/lib/supabase';
 
 export function Step5Finalize({ dbId }: { dbId?: string | null }) {
-  const { register, watch, setValue } = useFormContext<DentalReportData>();
+  const { watch } = useFormContext<DentalReportData>();
   const [showPreview, setShowPreview] = useState(false);
   const [downloading, setDownloading] = useState(false);
-  const previewRef = useRef<HTMLDivElement>(null);
-
   const formData = watch() as DentalReportData;
 
   const checkedPathologies = formData.pathologies.filter((p) => p.checked);
@@ -222,96 +217,6 @@ export function Step5Finalize({ dbId }: { dbId?: string | null }) {
           <div className="grid grid-cols-2 gap-3">
             <SummaryField label="Follow-up" value={formData.followUpTimeline} />
             <SummaryField label="Sedation" value={formData.sedationUsed ? `${formData.sedationDrugs.filter(d => d.drug).map(d => d.drug).join(', ')}` : 'No'} />
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Practitioner details */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-primary">
-              <User className="h-4 w-4" />
-            </div>
-            <div>
-              <CardTitle className="text-lg">Practitioner Details</CardTitle>
-              <CardDescription>For the report signature block</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-5">
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="practitionerName" className="text-sm font-semibold">
-                Practitioner Name
-              </Label>
-              <Input
-                id="practitionerName"
-                placeholder="Dr. Jane Smith"
-                className="h-12 text-base"
-                {...register('practitionerName')}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="practitionerCredentials" className="text-sm font-semibold">
-                Credentials
-              </Label>
-              <div className="relative">
-                <Award className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-                <Input
-                  id="practitionerCredentials"
-                  placeholder="DVM, DAVDC (Equine)"
-                  className="h-12 pl-10 text-base"
-                  {...register('practitionerCredentials')}
-                />
-              </div>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="clinicName" className="text-sm font-semibold">
-              Clinic / Practice Name
-            </Label>
-            <div className="relative">
-              <Building2 className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-              <Input
-                id="clinicName"
-                placeholder="e.g. Greenfield Equine Veterinary Services"
-                className="h-12 pl-10 text-base"
-                {...register('clinicName')}
-              />
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Signature */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-primary">
-              <FileCheck className="h-4 w-4" />
-            </div>
-            <div>
-              <CardTitle className="text-lg">Digital Signature</CardTitle>
-              <CardDescription>Sign with finger or stylus</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <SignaturePad
-            value={formData.signature}
-            onChange={(dataUrl) => setValue('signature', dataUrl)}
-          />
-          <div className="space-y-2">
-            <Label htmlFor="signatureDate" className="text-sm font-semibold">
-              Signature Date
-            </Label>
-            <Input
-              id="signatureDate"
-              type="date"
-              className="h-12 text-base"
-              {...register('signatureDate')}
-            />
           </div>
         </CardContent>
       </Card>

@@ -29,7 +29,6 @@ export interface SedationEntry {
   id: string;
   drug: string;
   dose: string;
-  time: string;
 }
 
 export interface NerveBlockEntry {
@@ -37,7 +36,6 @@ export interface NerveBlockEntry {
   block: string;
   drug: string;
   dose: string;
-  time: string;
 }
 
 export type LateralExcursion = 'Smooth' | 'Step' | 'Mouth opens to slide' | '';
@@ -105,13 +103,6 @@ export interface DentalReportData {
   treatments: TreatmentPerformed[];
   followUpTimeline: string;
   additionalNotes: string;
-
-  // Step 5 — Finalize
-  practitionerName: string;
-  practitionerCredentials: string;
-  clinicName: string;
-  signature: string;
-  signatureDate: string;
 }
 
 export const SEDATION_DRUGS = [
@@ -158,9 +149,11 @@ export const SOFT_TISSUE_OPTIONS = [
 ] as const;
 
 export const TREATMENT_OPTIONS = [
-  'Floating (rasping)', 'Extraction', 'Bit seat applied',
-  'Wolf teeth removal', 'Hook reduction', 'Ramp reduction',
-  'Diastema treatment', 'Fracture repair', 'No treatment required',
+  'Float', 'Stepped', 'Bitseat', 'Sharp Points',
+  'Reduced', 'Caps', 'Balance', 'Cap Fragments',
+  'Extract', 'Impacted', 'ETR', 'Supernumerary',
+  'Hooks', 'Expired', 'Ramps', 'Fractured',
+  'Wave', 'Mobile',
 ] as const;
 
 export const FOLLOW_UP_OPTIONS = [
@@ -220,11 +213,11 @@ export function createInitialTreatments(): TreatmentPerformed[] {
 }
 
 export function createInitialSedationDrugs(): SedationEntry[] {
-  return [{ id: 'sed-0', drug: '', dose: '', time: '' }];
+  return [{ id: 'sed-0', drug: '', dose: '' }];
 }
 
 export function createInitialNerveBlocks(): NerveBlockEntry[] {
-  return [{ id: 'block-0', block: '', drug: 'Lidocaine', dose: '', time: '' }];
+  return [{ id: 'block-0', block: '', drug: 'Lidocaine', dose: '' }];
 }
 
 function createEmptyExcursionAssessment(): ExcursionAssessment {
@@ -276,10 +269,5 @@ export function createInitialReport(): DentalReportData {
     treatments: createInitialTreatments(),
     followUpTimeline: '6 months',
     additionalNotes: '',
-    practitionerName: '',
-    practitionerCredentials: '',
-    clinicName: '',
-    signature: '',
-    signatureDate: new Date().toISOString().split('T')[0],
   };
 }

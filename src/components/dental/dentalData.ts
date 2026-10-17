@@ -314,8 +314,8 @@ export const DENTAL_CHART_SIDES: DentalChartSide[] = [
     id: '205-211',
     label: 'Left side — Triadan 205–211 / 305–311',
     backgroundSrc: '/dental-chart/triadan-205-211-side.png',
-    viewBoxWidth: 610,
-    viewBoxHeight: 406,
+    viewBoxWidth: 1536,
+    viewBoxHeight: 1024,
     regions: SIDE_205_211_REGIONS,
   },
   {
