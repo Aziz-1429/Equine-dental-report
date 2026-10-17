@@ -9,6 +9,10 @@ interface EquineDentalChartProps {
   exam: DentalExam;
   selectedTooth: string | null;
   onSelectTooth: (toothNumber: string) => void;
+  /** Verification overlay: draws every tooth's hit-area boundary and
+   * Triadan number at once, regardless of exam status, so alignment
+   * against the underlying artwork can be checked tooth by tooth. */
+  showAllOutlines?: boolean;
 }
 
 /**
@@ -26,7 +30,13 @@ interface EquineDentalChartProps {
  * a plain schematic grid so teeth stay visible and clickable without
  * anatomy that was never provided.
  */
-export function EquineDentalChart({ side, exam, selectedTooth, onSelectTooth }: EquineDentalChartProps) {
+export function EquineDentalChart({
+  side,
+  exam,
+  selectedTooth,
+  onSelectTooth,
+  showAllOutlines = false,
+}: EquineDentalChartProps) {
   const hasBackground = Boolean(side.backgroundSrc);
 
   return (
@@ -78,6 +88,32 @@ export function EquineDentalChart({ side, exam, selectedTooth, onSelectTooth }: 
           hasBackground={hasBackground}
         />
       ))}
+
+      {showAllOutlines && (
+        <g pointerEvents="none">
+          {side.regions.map((region) => (
+            <g key={`verify-${region.toothNumber}`}>
+              <polygon
+                points={region.points}
+                fill="none"
+                stroke="#2563eb"
+                strokeWidth={1.5}
+                vectorEffect="non-scaling-stroke"
+              />
+              <text
+                x={region.labelX}
+                y={region.labelY}
+                textAnchor="middle"
+                fill="#2563eb"
+                className="text-[16px] font-bold"
+                style={{ paintOrder: 'stroke', stroke: '#fff', strokeWidth: 2.5 }}
+              >
+                {region.toothNumber}
+              </text>
+            </g>
+          ))}
+        </g>
+      )}
     </svg>
   );
 }
