@@ -144,11 +144,28 @@ export function ToothExamPanel({ finding, onChange, onMarkStatus, onClear, onClo
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {TOOTH_STATUS_OPTIONS.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.glyph} {option.label}
-                </SelectItem>
-              ))}
+              {TOOTH_STATUS_OPTIONS.map((option) => {
+                // Radix's onValueChange only fires when the selected value
+                // actually changes, so re-picking the status a tooth
+                // already defaults to ('normal', pre-exam) would otherwise
+                // never flip `examined` to true. Hook the same events
+                // Radix itself treats as "select this item" (mouse click,
+                // and Enter/Space while focused) so it fires every time,
+                // regardless of whether the value changed.
+                const markExamined = () => onChange({ status: option.value, examined: true });
+                return (
+                  <SelectItem
+                    key={option.value}
+                    value={option.value}
+                    onClick={markExamined}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') markExamined();
+                    }}
+                  >
+                    {option.glyph} {option.label}
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
         </div>
