@@ -28,6 +28,17 @@ export interface ToothStatusOption {
   /** Short glyph/symbol shown on the chart as a non-color indicator
    * (accessibility: distinguishable without relying on hue alone). */
   glyph: string;
+  /** Tailwind class for this status's own outline stroke / legend
+   * border — each status gets a visually distinct color so the chart
+   * reads at a glance which specific finding a tooth has, not just
+   * normal-vs-not. Outline only, never a fill, so the underlying
+   * anatomical artwork stays fully visible. */
+  strokeClassName: string;
+  /** Tailwind classes for the legend swatch / badge (border + bg + text). */
+  swatchClassName: string;
+  /** Same color as a hex string, for the PDF's direct vector drawing
+   * (jsPDF draws its own lines — it can't read Tailwind classes). */
+  hex: string;
 }
 
 export type ToothSeverity = 'Mild' | 'Moderate' | 'Severe' | '';
