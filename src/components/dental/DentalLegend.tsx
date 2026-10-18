@@ -1,11 +1,10 @@
 import { TOOTH_STATUS_OPTIONS } from './dentalData';
 
 /**
- * Status legend. The chart's outline color is deliberately simplified to
- * green (normal), red (any other status), and purple (selected) so the
- * arcade reads at a glance — so the legend's swatches follow that same
- * two-color scheme rather than each status's own distinct color, with
- * the glyph still identifying the specific finding.
+ * Status legend. Each finding gets its own distinct outline color (see
+ * `TOOTH_STATUS_OPTIONS`), so the legend's swatches mirror those same
+ * per-status colors — the glyph is a second, color-independent cue for
+ * the same finding.
  */
 export function DentalLegend() {
   return (
@@ -23,11 +22,7 @@ export function DentalLegend() {
         {TOOTH_STATUS_OPTIONS.map((option) => (
           <span
             key={option.value}
-            className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${
-              option.value === 'normal'
-                ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
-                : 'border-red-600 bg-red-50 text-red-700'
-            }`}
+            className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-medium ${option.swatchClassName}`}
           >
             <span className="w-3 text-center font-bold">{option.glyph}</span>
             {option.label}

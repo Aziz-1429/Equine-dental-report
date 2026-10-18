@@ -22,61 +22,97 @@ export const TOOTH_STATUS_OPTIONS: ToothStatusOption[] = [
     value: 'normal',
     label: 'Normal',
     glyph: '✓',
+    strokeClassName: 'stroke-emerald-500',
+    swatchClassName: 'border-emerald-500 bg-emerald-50 text-emerald-700',
+    hex: '#10b981',
   },
   {
     value: 'abnormal',
     label: 'Abnormal',
     glyph: '!',
+    strokeClassName: 'stroke-red-600',
+    swatchClassName: 'border-red-600 bg-red-50 text-red-700',
+    hex: '#dc2626',
   },
   {
     value: 'missing',
     label: 'Missing',
     glyph: '×',
+    strokeClassName: 'stroke-slate-500',
+    swatchClassName: 'border-slate-500 bg-slate-50 text-slate-700',
+    hex: '#64748b',
   },
   {
     value: 'extracted',
     label: 'Extracted',
     glyph: '⊘',
+    strokeClassName: 'stroke-orange-600',
+    swatchClassName: 'border-orange-600 bg-orange-50 text-orange-700',
+    hex: '#ea580c',
   },
   {
     value: 'fractured',
     label: 'Fractured',
     glyph: '⚡',
+    strokeClassName: 'stroke-amber-500',
+    swatchClassName: 'border-amber-500 bg-amber-50 text-amber-700',
+    hex: '#f59e0b',
   },
   {
     value: 'caries',
     label: 'Caries',
     glyph: '●',
+    strokeClassName: 'stroke-rose-600',
+    swatchClassName: 'border-rose-600 bg-rose-50 text-rose-700',
+    hex: '#e11d48',
   },
   {
     value: 'periodontal-disease',
     label: 'Periodontal disease',
     glyph: '◆',
+    strokeClassName: 'stroke-fuchsia-600',
+    swatchClassName: 'border-fuchsia-600 bg-fuchsia-50 text-fuchsia-700',
+    hex: '#c026d3',
   },
   {
     value: 'eruption-issue',
     label: 'Eruption issue',
     glyph: '↑',
+    strokeClassName: 'stroke-sky-600',
+    swatchClassName: 'border-sky-600 bg-sky-50 text-sky-700',
+    hex: '#0284c7',
   },
   {
     value: 'malocclusion',
     label: 'Malocclusion (wave/step/ramp)',
     glyph: '~',
+    strokeClassName: 'stroke-indigo-600',
+    swatchClassName: 'border-indigo-600 bg-indigo-50 text-indigo-700',
+    hex: '#4f46e5',
   },
   {
     value: 'overgrowth',
     label: 'Overgrowth',
     glyph: '▲',
+    strokeClassName: 'stroke-teal-600',
+    swatchClassName: 'border-teal-600 bg-teal-50 text-teal-700',
+    hex: '#0d9488',
   },
   {
     value: 'painful',
     label: 'Painful',
     glyph: '✦',
+    strokeClassName: 'stroke-lime-600',
+    swatchClassName: 'border-lime-600 bg-lime-50 text-lime-700',
+    hex: '#65a30d',
   },
   {
     value: 'other',
     label: 'Other',
     glyph: '?',
+    strokeClassName: 'stroke-stone-500',
+    swatchClassName: 'border-stone-500 bg-stone-50 text-stone-700',
+    hex: '#78716c',
   },
 ];
 
@@ -84,17 +120,16 @@ export function getStatusOption(status: ToothStatus): ToothStatusOption {
   return TOOTH_STATUS_OPTIONS.find((o) => o.value === status) ?? TOOTH_STATUS_OPTIONS[0];
 }
 
-/** The chart's outline color is deliberately simplified to just two
- * colors (plus purple for the currently-selected tooth, handled
- * separately) — green for normal, red for every other status — so the
- * arcade reads at a glance. The SPECIFIC finding is still visible via
- * each status's own glyph; only the outline color is binary. */
+/** Each status gets its own distinct outline color (see
+ * `TOOTH_STATUS_OPTIONS`) so the chart shows which specific finding a
+ * tooth has at a glance, not just normal-vs-not. Selection (purple) is
+ * handled separately, overriding this while a tooth is actively open. */
 export function getOutlineClassName(status: ToothStatus): string {
-  return status === 'normal' ? 'stroke-emerald-500' : 'stroke-red-600';
+  return getStatusOption(status).strokeClassName;
 }
 
 export function getOutlineHex(status: ToothStatus): string {
-  return status === 'normal' ? '#10b981' : '#dc2626';
+  return getStatusOption(status).hex;
 }
 
 /**
