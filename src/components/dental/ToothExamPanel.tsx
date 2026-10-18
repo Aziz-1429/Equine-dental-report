@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
-import { CheckCircle2, X } from 'lucide-react';
+import { CheckCircle2, ChevronDown, X } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -16,6 +16,39 @@ import {
 import { cn } from '@/lib/utils';
 import { TOOTH_STATUS_OPTIONS, TOOTH_FINDING_OPTIONS, TOOTH_SEVERITY_OPTIONS, isWolfTooth } from './dentalData';
 import { ToothFinding, ToothStatus, ToothSeverity } from './dentalTypes';
+
+function FindingsDropdown({ value, onChange }: { value: string[]; onChange: (next: string[]) => void }) {
+  const toggle = (option: string) => {
+    onChange(value.includes(option) ? value.filter((v) => v !== option) : [...value, option]);
+  };
+
+  return (
+    <details className="group rounded-lg border border-slate-200 dark:border-slate-700">
+      <summary className="flex h-10 cursor-pointer list-none items-center justify-between rounded-lg px-3 text-xs text-slate-700 dark:text-slate-300 [&::-webkit-details-marker]:hidden">
+        <span className={value.length === 0 ? 'text-slate-400' : ''}>
+          {value.length === 0 ? 'Select findings' : `${value.length} selected`}
+        </span>
+        <ChevronDown className="h-4 w-4 shrink-0 text-slate-400 transition-transform group-open:rotate-180" />
+      </summary>
+      <div className="space-y-1 border-t border-slate-200 p-2 dark:border-slate-700">
+        {TOOTH_FINDING_OPTIONS.map((option) => (
+          <label
+            key={option}
+            className="flex items-center gap-2.5 rounded-md p-2 text-xs text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
+          >
+            <input
+              type="checkbox"
+              checked={value.includes(option)}
+              onChange={() => toggle(option)}
+              className="h-3.5 w-3.5 rounded border-slate-300 text-primary focus:ring-primary"
+            />
+            {option}
+          </label>
+        ))}
+      </div>
+    </details>
+  );
+}
 
 interface ToothExamPanelProps {
   finding: ToothFinding;
@@ -39,13 +72,6 @@ export function ToothExamPanel({ finding, onChange, onMarkStatus, onClear, onClo
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onClose]);
-
-  const toggleFinding = (f: string) => {
-    const next = finding.findings.includes(f)
-      ? finding.findings.filter((x) => x !== f)
-      : [...finding.findings, f];
-    onChange({ findings: next });
-  };
 
   return (
     <div className="flex h-full min-h-0 flex-1 flex-col">
@@ -172,22 +198,7 @@ export function ToothExamPanel({ finding, onChange, onMarkStatus, onClear, onClo
 
         <div className="space-y-1.5">
           <Label className="text-xs font-semibold">Findings</Label>
-          <div className="grid grid-cols-1 gap-1.5">
-            {TOOTH_FINDING_OPTIONS.map((f) => (
-              <label
-                key={f}
-                className="flex cursor-pointer items-center gap-2 rounded-md border border-slate-200 px-2.5 py-1.5 text-xs text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
-              >
-                <input
-                  type="checkbox"
-                  checked={finding.findings.includes(f)}
-                  onChange={() => toggleFinding(f)}
-                  className="h-3.5 w-3.5 accent-primary"
-                />
-                {f}
-              </label>
-            ))}
-          </div>
+          <FindingsDropdown value={finding.findings} onChange={(next) => onChange({ findings: next })} />
         </div>
 
         <div className="space-y-1.5">
