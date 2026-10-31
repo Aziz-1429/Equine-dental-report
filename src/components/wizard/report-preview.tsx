@@ -1,6 +1,6 @@
 'use client';
 
-import { DentalReportData, ToothFinding, toothType } from '@/lib/types';
+import { DentalReportData, ReportPhoto, ToothFinding, toothType } from '@/lib/types';
 import { getStatusOption } from '@/components/dental/dentalData';
 import { HorseLogoForPDF } from '@/components/logo';
 
@@ -167,8 +167,16 @@ function hasExamMeasurements(data: DentalReportData): boolean {
   return Boolean(
     m.farside.excursion || m.nearside.excursion || m.rostrocaudalExcursion ||
     m.molarAngleFarside.before || m.incisorAngle.before || m.molarAngleNearside.before ||
+    m.molarAngleFarside.beforeDegrees || m.incisorAngle.beforeDegrees || m.molarAngleNearside.beforeDegrees ||
     m.tmjPainFarside || m.tmjPainNearside
   );
+}
+
+/** "Steep (22°)" when a measured value exists, otherwise just the pill. */
+function angleText(qualitative: string, degrees: string): string {
+  if (qualitative && degrees) return `${qualitative} (${degrees}°)`;
+  if (degrees) return `${degrees}°`;
+  return qualitative;
 }
 
 function ExamMeasurementsBlock({ data }: { data: DentalReportData }) {
@@ -218,18 +226,12 @@ function ExamMeasurementsBlock({ data }: { data: DentalReportData }) {
         </thead>
         <tbody>
           <tr>
-            <td style={{ padding: '6px', border: `0.5px solid ${SECONDARY_COLOR}`, verticalAlign: 'top' }}>
-              <PillRow label="Before Dental Work" value={m.molarAngleFarside.before} />
-              <PillRow label="After Dental Work" value={m.molarAngleFarside.after} />
-            </td>
-            <td style={{ padding: '6px', border: `0.5px solid ${SECONDARY_COLOR}`, verticalAlign: 'top' }}>
-              <PillRow label="Before Dental Work" value={m.incisorAngle.before} />
-              <PillRow label="After Dental Work" value={m.incisorAngle.after} />
-            </td>
-            <td style={{ padding: '6px', border: `0.5px solid ${SECONDARY_COLOR}`, verticalAlign: 'top' }}>
-              <PillRow label="Before Dental Work" value={m.molarAngleNearside.before} />
-              <PillRow label="After Dental Work" value={m.molarAngleNearside.after} />
-            </td>
+            {([m.molarAngleFarside, m.incisorAngle, m.molarAngleNearside] as const).map((a, i) => (
+              <td key={i} style={{ padding: '6px', border: `0.5px solid ${SECONDARY_COLOR}`, verticalAlign: 'top' }}>
+                <PillRow label="Before Dental Work" value={angleText(a.before, a.beforeDegrees)} />
+                <PillRow label="After Dental Work" value={angleText(a.after, a.afterDegrees)} />
+              </td>
+            ))}
           </tr>
         </tbody>
       </table>
@@ -286,6 +288,8 @@ export function ReportPreview({ data }: { data: DentalReportData }) {
   const checkedTreatments = data.treatments.filter((t) => t.checked);
   const activeDrugs = data.sedationDrugs.filter((d) => d.drug);
   const activeBlocks = data.nerveBlocks.filter((b) => b.block);
+  const photoRows: ReportPhoto[][] = [];
+  for (let i = 0; i < (data.photos ?? []).length; i += 2) photoRows.push(data.photos.slice(i, i + 2));
 
   const formattedDate = data.examDate
     ? new Date(data.examDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
@@ -315,9 +319,9 @@ export function ReportPreview({ data }: { data: DentalReportData }) {
       <div data-pdf-section style={sectionStyle}>
         <SectionTitle>Client &amp; Administrative Information</SectionTitle>
         <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-          <FieldBox label="Owner" value={data.clientName} />
+          <FieldBox label="Client" value={data.clientName} />
           <FieldBox label="Phone" value={data.phone ? `${data.phoneCountryCode} ${data.phone}` : ''} />
-          <FieldBox label="Address" value={data.stableLocation} />
+          <FieldBox label="Stable / Exam Location" value={data.stableLocation} />
           <FieldBox label="Date" value={formattedDate} />
           <FieldBox label="Email" value={data.email} />
         </div>
@@ -330,8 +334,9 @@ export function ReportPreview({ data }: { data: DentalReportData }) {
           <FieldBox label="Equine Name" value={data.horseName} />
           <FieldBox label="Horse Code" value={data.horseCode} />
           <FieldBox label="Breed" value={data.breed} />
-          <FieldBox label="Gender" value={data.sex} />
-          <FieldBox label="Age" value={data.age} />
+          <FieldBox label="Sex" value={data.sex} />
+          <FieldBox label="Age" value={data.age ? `${data.age} yr` : ''} />
+          <FieldBox label="Weight" value={data.weightKg ? `${data.weightKg} kg` : ''} />
           <FieldBox label="BCS" value={data.bodyConditionScore} />
           <FieldBox label="Color" value={data.color} />
         </div>
@@ -365,8 +370,9 @@ export function ReportPreview({ data }: { data: DentalReportData }) {
           {activeBlocks.map((b, idx) => (
             <div key={b.id} style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between' }}>
               <FieldBox label={`Block ${activeBlocks.length > 1 ? `#${idx + 1}` : ''}`} value={b.block} />
+              <FieldBox label="Side" value={b.side} />
               <FieldBox label="Drug" value={b.drug} />
-              <FieldBox label="Dose" value={b.dose} />
+              <FieldBox label="Volume" value={b.volume ? `${b.volume} mL` : ''} />
             </div>
           ))}
         </div>
@@ -415,10 +421,10 @@ export function ReportPreview({ data }: { data: DentalReportData }) {
         </div>
       )}
 
-      {/* Pathologies */}
+      {/* Whole-mouth (arcade-level) findings */}
       {checkedPathologies.length > 0 && (
         <div data-pdf-section style={sectionStyle}>
-          <SectionTitle>Pathologies Identified</SectionTitle>
+          <SectionTitle>Whole-Mouth Findings</SectionTitle>
           <div>{checkedPathologies.map((p) => <Tag key={p.id} label={p.label} color="amber" />)}</div>
         </div>
       )}
@@ -446,6 +452,33 @@ export function ReportPreview({ data }: { data: DentalReportData }) {
           <div>{checkedTreatments.map((t) => <Tag key={t.id} label={t.label} color="brand" />)}</div>
         </div>
       )}
+
+      {/* Clinical photographs — one data-pdf-section per ROW of two, so the
+          PDF page breaks only ever fall between rows, never through a
+          photo. Data URLs rasterize reliably under html2canvas. */}
+      {photoRows.length > 0 &&
+        photoRows.map((row, rowIdx) => (
+          <div key={rowIdx} data-pdf-section style={sectionStyle}>
+            {rowIdx === 0 && <SectionTitle>Clinical Photographs</SectionTitle>}
+            <div style={{ display: 'flex', gap: 12, marginBottom: 10 }}>
+              {row.map((photo, i) => {
+                const n = rowIdx * 2 + i + 1;
+                const label = [photo.toothNumber ? `Tooth ${photo.toothNumber}` : '', photo.caption].filter(Boolean).join(' — ');
+                return (
+                  <div key={photo.id} style={{ width: '50%', boxSizing: 'border-box' }}>
+                    <div style={{ border: `0.5px solid ${SECONDARY_COLOR}`, borderRadius: 4, overflow: 'hidden', backgroundColor: '#fafafa', height: 230, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element -- embedded data URL for PDF capture */}
+                      <img src={photo.dataUrl} alt={label || `Clinical photograph ${n}`} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block' }} />
+                    </div>
+                    <div style={{ fontSize: 9, color: '#334155', marginTop: 4, lineHeight: 1.35 }}>
+                      <span style={{ fontWeight: 700, color: BRAND_COLOR }}>Fig. {n}.</span> {label || '—'}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
 
       {/* Recommendations */}
       <div data-pdf-section style={{ ...sectionStyle, paddingBottom: 40 }}>

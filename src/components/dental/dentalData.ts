@@ -35,8 +35,8 @@ export const TOOTH_STATUS_OPTIONS: ToothStatusOption[] = [
     hex: '#dc2626',
   },
   {
-    value: 'missing',
-    label: 'Missing',
+    value: 'absent',
+    label: 'Absent — congenital / never erupted',
     glyph: '×',
     strokeClassName: 'stroke-slate-500',
     swatchClassName: 'border-slate-500 bg-slate-50 text-slate-700',
@@ -44,77 +44,18 @@ export const TOOTH_STATUS_OPTIONS: ToothStatusOption[] = [
   },
   {
     value: 'extracted',
-    label: 'Extracted',
+    label: 'Absent — extracted',
     glyph: '⊘',
     strokeClassName: 'stroke-orange-600',
     swatchClassName: 'border-orange-600 bg-orange-50 text-orange-700',
     hex: '#ea580c',
   },
-  {
-    value: 'fractured',
-    label: 'Fractured',
-    glyph: '⚡',
-    strokeClassName: 'stroke-amber-500',
-    swatchClassName: 'border-amber-500 bg-amber-50 text-amber-700',
-    hex: '#f59e0b',
-  },
-  {
-    value: 'caries',
-    label: 'Caries',
-    glyph: '●',
-    strokeClassName: 'stroke-rose-600',
-    swatchClassName: 'border-rose-600 bg-rose-50 text-rose-700',
-    hex: '#e11d48',
-  },
-  {
-    value: 'periodontal-disease',
-    label: 'Periodontal disease',
-    glyph: '◆',
-    strokeClassName: 'stroke-fuchsia-600',
-    swatchClassName: 'border-fuchsia-600 bg-fuchsia-50 text-fuchsia-700',
-    hex: '#c026d3',
-  },
-  {
-    value: 'eruption-issue',
-    label: 'Eruption issue',
-    glyph: '↑',
-    strokeClassName: 'stroke-sky-600',
-    swatchClassName: 'border-sky-600 bg-sky-50 text-sky-700',
-    hex: '#0284c7',
-  },
-  {
-    value: 'malocclusion',
-    label: 'Malocclusion (wave/step/ramp)',
-    glyph: '~',
-    strokeClassName: 'stroke-indigo-600',
-    swatchClassName: 'border-indigo-600 bg-indigo-50 text-indigo-700',
-    hex: '#4f46e5',
-  },
-  {
-    value: 'overgrowth',
-    label: 'Overgrowth',
-    glyph: '▲',
-    strokeClassName: 'stroke-teal-600',
-    swatchClassName: 'border-teal-600 bg-teal-50 text-teal-700',
-    hex: '#0d9488',
-  },
-  {
-    value: 'painful',
-    label: 'Painful',
-    glyph: '✦',
-    strokeClassName: 'stroke-lime-600',
-    swatchClassName: 'border-lime-600 bg-lime-50 text-lime-700',
-    hex: '#65a30d',
-  },
-  {
-    value: 'other',
-    label: 'Other',
-    glyph: '?',
-    strokeClassName: 'stroke-stone-500',
-    swatchClassName: 'border-stone-500 bg-stone-50 text-stone-700',
-    hex: '#78716c',
-  },
 ];
+
+/** Statuses meaning "no tooth is there" — drawn with a dashed outline. */
+export function isAbsentStatus(status: ToothStatus): boolean {
+  return status === 'absent' || status === 'extracted';
+}
 
 export function getStatusOption(status: ToothStatus): ToothStatusOption {
   return TOOTH_STATUS_OPTIONS.find((o) => o.value === status) ?? TOOTH_STATUS_OPTIONS[0];
@@ -132,23 +73,9 @@ export function getOutlineHex(status: ToothStatus): string {
   return getStatusOption(status).hex;
 }
 
-/**
- * Specific findings a tooth can be checked off with, independent of its
- * overall status. Reference: Floyd MR, "The Modified Triadan System:
- * Nomenclature for Veterinary Dentistry," J Vet Dent 1991;8(4):18-19.
- */
-export const TOOTH_FINDING_OPTIONS = [
-  'Excessive Transverse Ridges (ETR)',
-  'Sharp Enamel Points',
-  'Hook',
-  'Ramp',
-  'Step Mouth',
-  'Wave Mouth',
-  'Periodontal Pocket',
-  'Diastema / Feed Packing',
-  'Fracture',
-  'Missing Tooth',
-] as const;
+/** Re-exported so existing imports keep working; the list itself lives
+ * next to the ToothFinding type in dentalTypes.ts. */
+export { TOOTH_FINDING_OPTIONS } from './dentalTypes';
 
 export const TOOTH_SEVERITY_OPTIONS = ['Mild', 'Moderate', 'Severe'] as const;
 

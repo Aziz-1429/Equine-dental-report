@@ -58,6 +58,46 @@ function PillGroup<T extends string>({
   );
 }
 
+type AngleKey = 'molarAngleFarside' | 'incisorAngle' | 'molarAngleNearside';
+
+/** Qualitative Flat / Normal / Steep pills plus an optional measured
+ * value in degrees for when a gauge was used — before and after. */
+function TableAngleBlock({ title, angleKey }: { title: string; angleKey: AngleKey }) {
+  const { watch, setValue, register } = useFormContext<DentalReportData>();
+  const a = watch(`examMeasurements.${angleKey}`);
+  return (
+    <div className="space-y-3 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
+      <p className="text-xs font-bold uppercase tracking-widest text-slate-400">{title}</p>
+      {(['before', 'after'] as const).map((phase) => (
+        <div key={phase} className="space-y-1.5">
+          <Label className="text-xs font-semibold">{phase === 'before' ? 'Before' : 'After'} Dental Work</Label>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <PillGroup
+              options={TABLE_ANGLE_OPTIONS}
+              value={a[phase]}
+              onChange={(v) => setValue(`examMeasurements.${angleKey}.${phase}`, v)}
+            />
+            <div className="relative">
+              <Input
+                type="number"
+                min="0"
+                max="90"
+                step="1"
+                inputMode="numeric"
+                placeholder="°"
+                aria-label={`${title} ${phase} dental work, degrees`}
+                className="h-7 w-[64px] pr-5 text-xs"
+                {...register(`examMeasurements.${angleKey}.${phase}Degrees`)}
+              />
+              <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400">°</span>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function ExamMeasurementsSection() {
   const { watch, setValue, register } = useFormContext<DentalReportData>();
   const m = watch('examMeasurements');
@@ -175,67 +215,11 @@ export function ExamMeasurementsSection() {
           </div>
         </div>
 
-        {/* Table angles */}
+        {/* Table angles — qualitative pill plus optional measured degrees */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <div className="space-y-3 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
-            <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Molar Table Angle (Right)</p>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Before Dental Work</Label>
-              <PillGroup
-                options={TABLE_ANGLE_OPTIONS}
-                value={m.molarAngleFarside.before}
-                onChange={(v) => setValue('examMeasurements.molarAngleFarside.before', v)}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">After Dental Work</Label>
-              <PillGroup
-                options={TABLE_ANGLE_OPTIONS}
-                value={m.molarAngleFarside.after}
-                onChange={(v) => setValue('examMeasurements.molarAngleFarside.after', v)}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-3 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
-            <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Incisor Table Angle</p>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Before Dental Work</Label>
-              <PillGroup
-                options={TABLE_ANGLE_OPTIONS}
-                value={m.incisorAngle.before}
-                onChange={(v) => setValue('examMeasurements.incisorAngle.before', v)}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">After Dental Work</Label>
-              <PillGroup
-                options={TABLE_ANGLE_OPTIONS}
-                value={m.incisorAngle.after}
-                onChange={(v) => setValue('examMeasurements.incisorAngle.after', v)}
-              />
-            </div>
-          </div>
-
-          <div className="space-y-3 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
-            <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Molar Table Angle (Left)</p>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Before Dental Work</Label>
-              <PillGroup
-                options={TABLE_ANGLE_OPTIONS}
-                value={m.molarAngleNearside.before}
-                onChange={(v) => setValue('examMeasurements.molarAngleNearside.before', v)}
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">After Dental Work</Label>
-              <PillGroup
-                options={TABLE_ANGLE_OPTIONS}
-                value={m.molarAngleNearside.after}
-                onChange={(v) => setValue('examMeasurements.molarAngleNearside.after', v)}
-              />
-            </div>
-          </div>
+          <TableAngleBlock title="Molar Table Angle (Right)" angleKey="molarAngleFarside" />
+          <TableAngleBlock title="Incisor Table Angle" angleKey="incisorAngle" />
+          <TableAngleBlock title="Molar Table Angle (Left)" angleKey="molarAngleNearside" />
         </div>
 
         {/* TMJ pain scale */}

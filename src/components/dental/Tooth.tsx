@@ -2,7 +2,7 @@
 
 import { KeyboardEvent } from 'react';
 import { ToothFinding, ToothRegion } from './dentalTypes';
-import { getStatusOption, getOutlineClassName, toothDomePath, isUpperIncisor } from './dentalData';
+import { getStatusOption, getOutlineClassName, isAbsentStatus, toothDomePath, isUpperIncisor } from './dentalData';
 
 interface ToothProps {
   region: ToothRegion;
@@ -29,7 +29,7 @@ interface ToothProps {
 export function Tooth({ region, finding, selected, onSelect, hasBackground }: ToothProps) {
   const status = getStatusOption(finding.status);
   const isUntouched = !finding.examined;
-  const isBroken = finding.status === 'missing' || finding.status === 'extracted';
+  const isBroken = isAbsentStatus(finding.status);
   const domePath = !hasBackground ? toothDomePath(region.points, isUpperIncisor(region.toothNumber)) : null;
 
   const handleKeyDown = (e: KeyboardEvent<SVGGElement>) => {
