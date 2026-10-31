@@ -1,7 +1,7 @@
 'use client';
 
 import { useFormContext } from 'react-hook-form';
-import { Ruler } from 'lucide-react';
+import { Info, Ruler } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -60,10 +60,63 @@ function PillGroup<T extends string>({
 
 type AngleKey = 'molarAngleFarside' | 'incisorAngle' | 'molarAngleNearside';
 
-/** Qualitative Flat / Normal / Steep pills plus an optional measured
- * value in degrees for when a gauge was used — before and after. */
+/**
+ * Clinician-facing helper text, shown on screen only (never printed in
+ * the report). Collapsed by default behind an ⓘ so the form stays
+ * compact for experienced users.
+ */
+function Hint({ children }: { children: React.ReactNode }) {
+  return (
+    <details className="group">
+      <summary className="inline-flex cursor-pointer list-none items-center gap-1 text-[11px] font-medium text-slate-400 hover:text-primary [&::-webkit-details-marker]:hidden">
+        <Info className="h-3 w-3" /> How to assess
+      </summary>
+      <div className="mt-1.5 rounded-md border border-sky-100 bg-sky-50 p-2.5 text-[11px] leading-relaxed text-slate-700 dark:border-sky-900 dark:bg-sky-950/40 dark:text-slate-300">
+        {children}
+      </div>
+    </details>
+  );
+}
+
+const HINTS = {
+  lateral: (
+    <>
+      Head level, mouth closed. Slide the mandible to one side until the cheek teeth first touch and the incisors begin
+      to separate. <b>Smooth</b> — glides evenly. <b>Step</b> — catches or jumps (uneven arcade / overgrowth).{' '}
+      <b>Mouth opens to slide</b> — incisors must separate before the molars meet (overlong incisors). Compare both
+      sides; asymmetry matters more than the absolute value.
+    </>
+  ),
+  occlusion: (
+    <>
+      How far the mandible slides before the cheek teeth make contact, relative to what is normal for this horse.
+      Record it the same way before and after floating so the change is visible. (In the literature this is
+      measured as a distance — mean ≈ 12 mm, range 4–30 mm.)
+    </>
+  ),
+  rostrocaudal: (
+    <>
+      Mouth closed, flex and extend the poll: the mandible should glide forward and back a few millimetres freely.{' '}
+      <b>Reduced</b> — restricted glide. <b>Painful</b> — resentment or TMJ discomfort on movement.
+    </>
+  ),
+  table: (
+    <>
+      Angle of the cheek-tooth occlusal surface relative to horizontal (≈ 10–15° upper, steeper lower).{' '}
+      <b>Flat</b> — worn level, poor grinding. <b>Steep</b> — exaggerated, shear-mouth tendency. Incisor angle is judged
+      in profile.
+    </>
+  ),
+  tmj: (
+    <>
+      Firm digital pressure over each temporomandibular joint and along the masseter; grade the horse&apos;s reaction.
+    </>
+  ),
+};
+
+/** Qualitative Flat / Normal / Steep pills, before and after. */
 function TableAngleBlock({ title, angleKey }: { title: string; angleKey: AngleKey }) {
-  const { watch, setValue, register } = useFormContext<DentalReportData>();
+  const { watch, setValue } = useFormContext<DentalReportData>();
   const a = watch(`examMeasurements.${angleKey}`);
   return (
     <div className="space-y-3 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
@@ -71,27 +124,11 @@ function TableAngleBlock({ title, angleKey }: { title: string; angleKey: AngleKe
       {(['before', 'after'] as const).map((phase) => (
         <div key={phase} className="space-y-1.5">
           <Label className="text-xs font-semibold">{phase === 'before' ? 'Before' : 'After'} Dental Work</Label>
-          <div className="flex flex-wrap items-center gap-1.5">
-            <PillGroup
-              options={TABLE_ANGLE_OPTIONS}
-              value={a[phase]}
-              onChange={(v) => setValue(`examMeasurements.${angleKey}.${phase}`, v)}
-            />
-            <div className="relative">
-              <Input
-                type="number"
-                min="0"
-                max="90"
-                step="1"
-                inputMode="numeric"
-                placeholder="°"
-                aria-label={`${title} ${phase} dental work, degrees`}
-                className="h-7 w-[64px] pr-5 text-xs"
-                {...register(`examMeasurements.${angleKey}.${phase}Degrees`)}
-              />
-              <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 text-xs text-slate-400">°</span>
-            </div>
-          </div>
+          <PillGroup
+            options={TABLE_ANGLE_OPTIONS}
+            value={a[phase]}
+            onChange={(v) => setValue(`examMeasurements.${angleKey}.${phase}`, v)}
+          />
         </div>
       ))}
     </div>
@@ -127,6 +164,7 @@ export function ExamMeasurementsSection() {
                 value={m.farside.excursion}
                 onChange={(v) => setValue('examMeasurements.farside.excursion', v)}
               />
+              <Hint>{HINTS.lateral}</Hint>
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold">Post Dental Work</Label>
@@ -154,6 +192,7 @@ export function ExamMeasurementsSection() {
                 />
               </div>
             </div>
+            <Hint>{HINTS.occlusion}</Hint>
           </div>
 
           <div className="space-y-3 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
@@ -165,6 +204,7 @@ export function ExamMeasurementsSection() {
                 value={m.rostrocaudalExcursion}
                 onChange={(v) => setValue('examMeasurements.rostrocaudalExcursion', v)}
               />
+              <Hint>{HINTS.rostrocaudal}</Hint>
             </div>
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold">R/C Post Dental Work</Label>
@@ -215,16 +255,20 @@ export function ExamMeasurementsSection() {
           </div>
         </div>
 
-        {/* Table angles — qualitative pill plus optional measured degrees */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <TableAngleBlock title="Molar Table Angle (Right)" angleKey="molarAngleFarside" />
-          <TableAngleBlock title="Incisor Table Angle" angleKey="incisorAngle" />
-          <TableAngleBlock title="Molar Table Angle (Left)" angleKey="molarAngleNearside" />
+        {/* Table angles */}
+        <div className="space-y-2">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <TableAngleBlock title="Molar Table Angle (Right)" angleKey="molarAngleFarside" />
+            <TableAngleBlock title="Incisor Table Angle" angleKey="incisorAngle" />
+            <TableAngleBlock title="Molar Table Angle (Left)" angleKey="molarAngleNearside" />
+          </div>
+          <Hint>{HINTS.table}</Hint>
         </div>
 
         {/* TMJ pain scale */}
         <div className="space-y-3 rounded-lg border border-slate-200 p-3 dark:border-slate-700">
           <p className="text-xs font-bold uppercase tracking-widest text-slate-400">TMJ Pain Scale</p>
+          <Hint>{HINTS.tmj}</Hint>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label className="text-xs font-semibold">Right</Label>

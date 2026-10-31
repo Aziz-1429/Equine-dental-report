@@ -72,9 +72,6 @@ export interface ExcursionAssessment {
 export interface TableAngleAssessment {
   before: TableAngle;
   after: TableAngle;
-  /** Optional measured angle in degrees, when a gauge was used. */
-  beforeDegrees: string;
-  afterDegrees: string;
 }
 
 /** The farside/nearside oral examination measurements from the clinic's
@@ -129,8 +126,46 @@ export interface DentalReportData {
   // Step 4 — Treatment
   treatments: TreatmentPerformed[];
   followUpTimeline: string;
+  /** Ticked quick-pick client instructions (labels from
+   * RECOMMENDATION_GROUPS); `additionalNotes` holds anything extra. */
+  recommendations: string[];
   additionalNotes: string;
 }
+
+/** Ready-made client instructions, grouped as they appear in Step 4.
+ * Sedation/feeding advice follows published owner guidance (AAEP, Merck
+ * Vet Manual, MSU CVM); the rest is routine post-floating care wording
+ * agreed with the clinic. */
+export const RECOMMENDATION_GROUPS: { title: string; items: string[] }[] = [
+  {
+    title: 'After sedation',
+    items: [
+      'Withhold feed and water until fully awake (about 1–2 hours); keep in a stable or paddock without a hay net.',
+      'No riding or lunging for 24 hours.',
+    ],
+  },
+  {
+    title: 'After routine floating',
+    items: [
+      'Offer soaked / soft feed for 24–48 hours if the mouth is tender.',
+      'Bit rest for 3–5 days; check the bit fits and sits clear of the treated area.',
+      'Some feed dropping is normal for a few days — call the clinic if not eating normally after 48 hours.',
+    ],
+  },
+  {
+    title: 'Diet / long-term',
+    items: [
+      'Transition to soaked senior feed, hay replacer or chopped forage (reduced grinding surface).',
+      'Feed forage from the ground where possible to encourage natural lateral chewing.',
+    ],
+  },
+  {
+    title: 'Monitoring — call the clinic if',
+    items: [
+      'Nasal discharge (especially one-sided or foul-smelling), facial swelling, quidding, bad breath or reluctance to eat.',
+    ],
+  },
+];
 
 export const SEDATION_DRUGS = [
   'Detomidine', 'Xylazine', 'Butorphanol', 'Acepromazine',
@@ -324,7 +359,7 @@ function createEmptyExcursionAssessment(): ExcursionAssessment {
 }
 
 function createEmptyTableAngleAssessment(): TableAngleAssessment {
-  return { before: '', after: '', beforeDegrees: '', afterDegrees: '' };
+  return { before: '', after: '' };
 }
 
 export function createInitialExamMeasurements(): ExamMeasurements {
@@ -370,6 +405,7 @@ export function createInitialReport(): DentalReportData {
     photos: [],
     treatments: createInitialTreatments(),
     followUpTimeline: '6 months',
+    recommendations: [],
     additionalNotes: '',
   };
 }
