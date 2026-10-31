@@ -138,7 +138,7 @@ export function Step5Finalize({ dbId }: { dbId?: string | null }) {
           Review &amp; Finalize Report
         </h2>
         <p className="mt-1 text-sm text-slate-500">
-          Verify the details, sign, and generate your PDF.
+          Verify the details and generate your PDF.
         </p>
       </div>
 
@@ -172,7 +172,7 @@ export function Step5Finalize({ dbId }: { dbId?: string | null }) {
           {checkedPathologies.length > 0 && (
             <div className="space-y-1.5">
               <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Pathologies ({checkedPathologies.length})
+                Whole-Mouth Findings ({checkedPathologies.length})
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {checkedPathologies.map((p) => (
@@ -214,9 +214,10 @@ export function Step5Finalize({ dbId }: { dbId?: string | null }) {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <SummaryField label="Follow-up" value={formData.followUpTimeline} />
             <SummaryField label="Sedation" value={formData.sedationUsed ? `${formData.sedationDrugs.filter(d => d.drug).map(d => d.drug).join(', ')}` : 'No'} />
+            <SummaryField label="Photos" value={formData.photos.length > 0 ? `${formData.photos.length} attached` : 'None'} />
           </div>
         </CardContent>
       </Card>

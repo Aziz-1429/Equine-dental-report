@@ -231,12 +231,12 @@ export default function ReportsPage() {
                         </span>
                         {pathologies.length > 0 && (
                           <span className="text-amber-600 dark:text-amber-400">
-                            {pathologies.length} pathology{pathologies.length > 1 ? 'ies' : ''}
+                            {pathologies.length} whole-mouth finding{pathologies.length > 1 ? 's' : ''}
                           </span>
                         )}
                         {treatments.length > 0 && (
                           <span className="text-emerald-600 dark:text-emerald-400">
-                            {treatments.length} treatment{treatments.length > 1 ? 's' : ''}
+                            {treatments.length} procedure{treatments.length > 1 ? 's' : ''}
                           </span>
                         )}
                       </div>

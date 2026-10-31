@@ -31,16 +31,35 @@ export interface SedationEntry {
   dose: string;
 }
 
+export type NerveBlockSide = 'Left' | 'Right' | 'Bilateral' | '';
+
 export interface NerveBlockEntry {
   id: string;
   block: string;
+  /** Which side was anaesthetised — a block record without laterality
+   * tells the next clinician nothing. */
+  side: NerveBlockSide;
   drug: string;
-  dose: string;
+  /** Volume of local anaesthetic injected, in mL. */
+  volume: string;
 }
+
+/** One clinical photograph attached to the report. `dataUrl` is a
+ * browser-compressed JPEG (see components/wizard/photo-upload.tsx) so a
+ * dozen phone photos still fit comfortably in the localStorage draft. */
+export interface ReportPhoto {
+  id: string;
+  dataUrl: string;
+  caption: string;
+  /** Optional Triadan number this photo documents. */
+  toothNumber: string;
+}
+
+export const MAX_REPORT_PHOTOS = 12;
 
 export type LateralExcursion = 'Smooth' | 'Step' | 'Mouth opens to slide' | '';
 export type RostrocaudalExcursion = 'Normal' | 'Reduced' | 'Painful' | '';
-export type TableAngle = 'Normal' | 'Flat' | 'Steep' | 'Excessive' | '';
+export type TableAngle = 'Flat' | 'Normal' | 'Steep' | '';
 export type TmjPainLevel = 'None' | 'Mild' | 'Moderate' | 'Severe' | '';
 
 export interface ExcursionAssessment {
@@ -53,6 +72,9 @@ export interface ExcursionAssessment {
 export interface TableAngleAssessment {
   before: TableAngle;
   after: TableAngle;
+  /** Optional measured angle in degrees, when a gauge was used. */
+  beforeDegrees: string;
+  afterDegrees: string;
 }
 
 /** The farside/nearside oral examination measurements from the clinic's
@@ -83,6 +105,9 @@ export interface DentalReportData {
   horseName: string;
   horseCode: string;
   age: string;
+  /** Body weight in kg (estimated or measured) — needed to interpret
+   * any sedation dose. */
+  weightKg: string;
   breed: string;
   sex: string;
   bodyConditionScore: string;
@@ -99,6 +124,7 @@ export interface DentalReportData {
   softTissue: SoftTissueFinding[];
   chartingNotes: string;
   examMeasurements: ExamMeasurements;
+  photos: ReportPhoto[];
 
   // Step 4 — Treatment
   treatments: TreatmentPerformed[];
@@ -112,14 +138,25 @@ export const SEDATION_DRUGS = [
 ] as const;
 
 export const HISTORY_OPTIONS = [
-  'Weight loss', 'Dropping feed', 'Quidding', 'Head tossing',
+  'No abnormalities reported',
+  'Weight loss', 'Dropping feed', 'Quidding', 'Dunking feed in water', 'Head tossing',
   'Nasal discharge', 'Foul odor (halitosis)', 'Facial swelling',
   'Reluctance to chew', 'Bit resistance', 'Excessive salivation',
+  'Previous dental treatment (date known)', 'Diet / forage change', 'Current medication',
 ] as const;
 
+/** Regional anaesthesia named by the nerve actually blocked, not the
+ * trunk. The "mandibular" block of older forms is the inferior alveolar
+ * nerve at the mandibular foramen. */
 export const NERVE_BLOCK_OPTIONS = [
-  'Mental nerve', 'Mandibular', 'Maxillary', 'Infraorbital', 'Local block',
+  'Infraorbital',
+  'Maxillary',
+  'Middle mental',
+  'Inferior alveolar (mandibular foramen)',
+  'Intra-oral local infiltration',
 ] as const;
+
+export const NERVE_BLOCK_SIDE_OPTIONS: NerveBlockSide[] = ['Left', 'Right', 'Bilateral'];
 
 export const LOCAL_ANESTHETIC_DRUGS = [
   'Lidocaine', 'Mepivacaine', 'Bupivacaine',
@@ -136,10 +173,22 @@ export const BCS_OPTIONS = [
   '8 — Fat', '9 — Extremely Fat',
 ] as const;
 
+/** Whole-mouth (arcade-level) findings only. Anything that belongs to a
+ * single tooth — points, hooks, fractures, caries, diastemata — is charted
+ * on that tooth via TOOTH_FINDING_OPTIONS, so one lesion never appears in
+ * two lists under two spellings. */
 export const PATHOLOGY_OPTIONS = [
-  'Sharp enamel points', 'Hooks', 'Ramps', 'Wave mouth', 'Step mouth',
-  'EOTRH', 'Caries', 'Diastemata', 'Overgrown crowns', 'Missing teeth',
-  'Fractured teeth', 'Periodontal disease',
+  'Wave mouth',
+  'Shear mouth',
+  'Step mouth',
+  'Smile (ventral curvature) incisors',
+  'Frown (dorsal curvature) incisors',
+  'Diagonal incisor malocclusion',
+  'Overjet (parrot mouth)',
+  'Underjet (sow mouth)',
+  'EOTRH',
+  'Generalised periodontal disease',
+  'Generalised oral ulceration',
 ] as const;
 
 export const SOFT_TISSUE_OPTIONS = [
@@ -149,12 +198,30 @@ export const SOFT_TISSUE_OPTIONS = [
   'Gingiva — normal', 'Gingiva — inflammation/recession',
 ] as const;
 
+/** Things the clinician DID. Findings (what was wrong) live in
+ * TOOTH_FINDING_OPTIONS / PATHOLOGY_OPTIONS, never here. */
 export const TREATMENT_OPTIONS = [
-  'Float', 'Stepped', 'Bitseat', 'Sharp Points',
-  'Reduced', 'Caps', 'Balance', 'Cap Fragments',
-  'Extract', 'Impacted', 'ETR', 'Supernumerary',
-  'Hooks', 'Expired', 'Ramps', 'Fractured',
-  'Wave', 'Mobile',
+  'Routine float (occlusal equilibration)',
+  'Sharp enamel point reduction',
+  'Bit seat',
+  'Hook reduction',
+  'Ramp reduction',
+  'Step reduction',
+  'Wave correction',
+  'ETR reduction',
+  'Incisor reduction / realignment',
+  'Canine reduction',
+  'Wolf tooth extraction',
+  'Cheek tooth extraction',
+  'Incisor extraction',
+  'Retained cap removal',
+  'Cap fragment removal',
+  'Supernumerary tooth extraction',
+  'Fracture fragment removal',
+  'Mobile tooth extraction',
+  'Diastema widening',
+  'Periodontal pocket debridement / packing',
+  'Radiographs taken',
 ] as const;
 
 export const FOLLOW_UP_OPTIONS = [
@@ -196,7 +263,7 @@ export const COUNTRY_CODES: CountryCode[] = [
 
 export const LATERAL_EXCURSION_OPTIONS: LateralExcursion[] = ['Smooth', 'Step', 'Mouth opens to slide'];
 export const ROSTROCAUDAL_EXCURSION_OPTIONS: RostrocaudalExcursion[] = ['Normal', 'Reduced', 'Painful'];
-export const TABLE_ANGLE_OPTIONS: TableAngle[] = ['Normal', 'Flat', 'Steep', 'Excessive'];
+export const TABLE_ANGLE_OPTIONS: TableAngle[] = ['Flat', 'Normal', 'Steep'];
 export const TMJ_PAIN_OPTIONS: TmjPainLevel[] = ['None', 'Mild', 'Moderate', 'Severe'];
 
 export const HORSE_BREEDS = [
@@ -249,7 +316,7 @@ export function createInitialSedationDrugs(): SedationEntry[] {
 }
 
 export function createInitialNerveBlocks(): NerveBlockEntry[] {
-  return [{ id: 'block-0', block: '', drug: 'Lidocaine', dose: '' }];
+  return [{ id: 'block-0', block: '', side: '', drug: 'Lidocaine', volume: '' }];
 }
 
 function createEmptyExcursionAssessment(): ExcursionAssessment {
@@ -257,7 +324,7 @@ function createEmptyExcursionAssessment(): ExcursionAssessment {
 }
 
 function createEmptyTableAngleAssessment(): TableAngleAssessment {
-  return { before: '', after: '' };
+  return { before: '', after: '', beforeDegrees: '', afterDegrees: '' };
 }
 
 export function createInitialExamMeasurements(): ExamMeasurements {
@@ -285,6 +352,7 @@ export function createInitialReport(): DentalReportData {
     horseName: '',
     horseCode: '',
     age: '',
+    weightKg: '',
     breed: '',
     sex: '',
     bodyConditionScore: '',
@@ -299,6 +367,7 @@ export function createInitialReport(): DentalReportData {
     softTissue: createInitialSoftTissue(),
     chartingNotes: '',
     examMeasurements: createInitialExamMeasurements(),
+    photos: [],
     treatments: createInitialTreatments(),
     followUpTimeline: '6 months',
     additionalNotes: '',

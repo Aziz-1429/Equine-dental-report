@@ -1,6 +1,6 @@
 import type jsPDF from 'jspdf';
 import { DentalReportData } from './types';
-import { DENTAL_CHART_SIDES, getOutlineHex, TOOTH_STATUS_OPTIONS, toothDomePoints, isUpperIncisor, INCISOR_MIDLINE_X } from '@/components/dental/dentalData';
+import { DENTAL_CHART_SIDES, getOutlineHex, isAbsentStatus, TOOTH_STATUS_OPTIONS, toothDomePoints, isUpperIncisor, INCISOR_MIDLINE_X } from '@/components/dental/dentalData';
 import { HORSE_VIEWBOX, HORSE_PATHS } from '@/components/logo';
 
 const BRAND_RGB: [number, number, number] = [68, 23, 82];
@@ -242,7 +242,7 @@ export async function renderDentalChartPage(pdf: jsPDF, data: DentalReportData):
     for (const region of side.regions) {
       const finding = data.teeth[region.toothNumber];
       if (!finding?.examined) continue;
-      const dashed = finding.status === 'missing' || finding.status === 'extracted';
+      const dashed = isAbsentStatus(finding.status);
       drawToothOutline(pdf, region.points, x, imgY, scaleX, scaleY, getOutlineHex(finding.status), dashed, 0.15);
     }
     maxImgBottom = Math.max(maxImgBottom, imgY + imgDisplayHeight);

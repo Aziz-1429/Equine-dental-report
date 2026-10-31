@@ -16,7 +16,7 @@ import { Logo } from '@/components/logo';
 import {
   DentalReportData, createInitialReport,
 } from '@/lib/types';
-import { loadDraft, saveDraft, clearDraft, getSavedTimestamp } from '@/lib/storage';
+import { loadDraft, saveDraft, clearDraft, getSavedTimestamp, normalizeReport, didLastSaveExceedQuota } from '@/lib/storage';
 import { saveReport } from '@/lib/supabase';
 import { Step1Administrative } from '@/components/wizard/step1-administrative';
 import { Step2Patient } from '@/components/wizard/step2-patient';
@@ -43,6 +43,7 @@ function HomeInner() {
   const [dbSaving, setDbSaving] = useState(false);
   const [dbId, setDbId] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [storageFull, setStorageFull] = useState(false);
 
   const methods = useForm<DentalReportData>({
     defaultValues: createInitialReport(),
@@ -66,7 +67,9 @@ function HomeInner() {
             .maybeSingle();
           if (error) throw error;
           if (data) {
-            reset(data.report_data as DentalReportData);
+            // Cloud rows may predate the current vocabularies — upgrade
+            // them exactly like a local draft.
+            reset(normalizeReport(data.report_data as Partial<DentalReportData>));
             setDbId(data.id);
             setSavedAt(new Date(data.updated_at));
           } else {
@@ -108,6 +111,7 @@ function HomeInner() {
     if (!mounted) return;
     const timer = setTimeout(() => {
       saveDraft(getValues());
+      setStorageFull(didLastSaveExceedQuota());
       setSavedAt(new Date());
       setShowSaved(true);
       setTimeout(() => setShowSaved(false), 2000);
@@ -234,6 +238,12 @@ function HomeInner() {
           {loadError && (
             <div className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-700 dark:border-amber-800 dark:bg-amber-950 dark:text-amber-400">
               {loadError}
+            </div>
+          )}
+          {storageFull && (
+            <div className="mb-4 rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-950 dark:text-red-400">
+              This browser&apos;s local storage is full, so the draft is no longer being saved on this device.
+              Remove a few photos in the Charting step to resume auto-save.
             </div>
           )}
           {savedAt && (

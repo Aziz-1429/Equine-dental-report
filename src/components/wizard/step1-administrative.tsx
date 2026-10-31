@@ -131,7 +131,7 @@ export function Step1Administrative() {
         <CardContent className="space-y-5">
           <div className="space-y-2">
             <Label htmlFor="stableLocation" className="text-sm font-semibold">
-              Stable / Farm Location
+              Stable / Exam Location
             </Label>
             <Input
               id="stableLocation"

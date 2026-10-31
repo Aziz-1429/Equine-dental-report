@@ -1,4 +1,5 @@
-import { DentalExam } from '@/components/dental/dentalTypes';
+import { DentalExam, ToothFinding } from '@/components/dental/dentalTypes';
+import { migrateTooth } from './storage';
 
 /**
  * Persistence for a dental exam. This is the ONLY file that knows the
@@ -25,7 +26,13 @@ export function loadExam(sideId: string): DentalExam | null {
   try {
     const raw = localStorage.getItem(storageKey(sideId));
     if (!raw) return null;
-    return JSON.parse(raw) as DentalExam;
+    const parsed = JSON.parse(raw) as Partial<DentalExam>;
+    // Upgrade any legacy status/finding vocabulary (see lib/storage.ts).
+    const teeth: Record<string, ToothFinding> = {};
+    for (const [toothNumber, saved] of Object.entries(parsed.teeth ?? {})) {
+      teeth[toothNumber] = migrateTooth(toothNumber, saved as unknown as Record<string, unknown>);
+    }
+    return { teeth, generalNotes: parsed.generalNotes ?? '' };
   } catch {
     return null;
   }

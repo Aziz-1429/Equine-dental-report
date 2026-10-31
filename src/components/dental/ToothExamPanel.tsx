@@ -100,17 +100,17 @@ export function ToothExamPanel({ finding, onChange, onMarkStatus, onClear, onClo
               Wolf Tooth — Quick Mark
             </Label>
             <p className="text-[11px] leading-snug text-amber-700/80 dark:text-amber-400/80">
-              Not every horse has this tooth. Flag whether it&apos;s present, and if so, whether it was extracted.
+              Not every horse has this tooth — absence is normal, not a pathology. Flag whether it&apos;s present, and if so, whether it was extracted.
             </p>
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={() =>
-                  onChange({ status: finding.status === 'missing' ? 'normal' : finding.status, examined: true })
+                  onChange({ status: finding.status === 'absent' ? 'normal' : finding.status, examined: true })
                 }
                 className={cn(
                   'flex-1 rounded-md border px-2.5 py-1.5 text-xs font-semibold transition-colors',
-                  finding.status !== 'missing'
+                  finding.status !== 'absent'
                     ? 'border-transparent bg-emerald-600 text-white'
                     : 'border-slate-300 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400'
                 )}
@@ -119,10 +119,10 @@ export function ToothExamPanel({ finding, onChange, onMarkStatus, onClear, onClo
               </button>
               <button
                 type="button"
-                onClick={() => onChange({ status: 'missing', examined: true })}
+                onClick={() => onChange({ status: 'absent', examined: true })}
                 className={cn(
                   'flex-1 rounded-md border px-2.5 py-1.5 text-xs font-semibold transition-colors',
-                  finding.status === 'missing'
+                  finding.status === 'absent'
                     ? 'border-transparent bg-slate-600 text-white'
                     : 'border-slate-300 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400'
                 )}
@@ -130,7 +130,7 @@ export function ToothExamPanel({ finding, onChange, onMarkStatus, onClear, onClo
                 Not Present
               </button>
             </div>
-            {finding.status !== 'missing' && (
+            {finding.status !== 'absent' && (
               <div className="flex gap-2">
                 <button
                   type="button"
@@ -198,7 +198,19 @@ export function ToothExamPanel({ finding, onChange, onMarkStatus, onClear, onClo
 
         <div className="space-y-1.5">
           <Label className="text-xs font-semibold">Findings</Label>
-          <FindingsDropdown value={finding.findings} onChange={(next) => onChange({ findings: next })} />
+          <FindingsDropdown
+            value={finding.findings}
+            onChange={(next) =>
+              // Naming a lesion on a tooth that is still "normal" is a
+              // contradiction, so ticking the first finding promotes the
+              // status to Abnormal automatically (never the other way).
+              onChange({
+                findings: next,
+                examined: true,
+                ...(next.length > 0 && finding.status === 'normal' ? { status: 'abnormal' as ToothStatus } : {}),
+              })
+            }
+          />
         </div>
 
         <div className="space-y-1.5">

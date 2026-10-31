@@ -30,7 +30,9 @@ import {
   SEDATION_DRUGS,
   HISTORY_OPTIONS,
   NERVE_BLOCK_OPTIONS,
+  NERVE_BLOCK_SIDE_OPTIONS,
   LOCAL_ANESTHETIC_DRUGS,
+  NerveBlockSide,
 } from '@/lib/types';
 
 function HistoryDropdown({ value, onChange }: { value: string[]; onChange: (next: string[]) => void }) {
@@ -98,7 +100,7 @@ export function Step2Patient() {
   });
 
   const addBlock = () => {
-    appendBlock({ id: `block-${Date.now()}`, block: '', drug: 'Lidocaine', dose: '' });
+    appendBlock({ id: `block-${Date.now()}`, block: '', side: '', drug: 'Lidocaine', volume: '' });
   };
 
   return (
@@ -166,6 +168,22 @@ export function Step2Patient() {
                 placeholder="e.g. EQ-2024-017"
                 className="h-12 text-base"
                 {...register('horseCode')}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="weightKg" className="text-sm font-semibold">
+                Weight (kg)
+              </Label>
+              <Input
+                id="weightKg"
+                type="number"
+                min="0"
+                step="1"
+                inputMode="numeric"
+                placeholder="e.g. 450 (estimated or weighed)"
+                className="h-12 text-base"
+                {...register('weightKg')}
               />
             </div>
           </div>
@@ -446,9 +464,9 @@ export function Step2Patient() {
                       </Button>
                     )}
                   </div>
-                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-medium">Block Type</Label>
+                      <Label className="text-xs font-medium">Block</Label>
                       <Select
                         value={watch(`nerveBlocks.${idx}.block`)}
                         onValueChange={(v) => setValue(`nerveBlocks.${idx}.block`, v)}
@@ -460,6 +478,24 @@ export function Step2Patient() {
                           {NERVE_BLOCK_OPTIONS.map((b) => (
                             <SelectItem key={b} value={b}>
                               {b}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-medium">Side</Label>
+                      <Select
+                        value={watch(`nerveBlocks.${idx}.side`)}
+                        onValueChange={(v) => setValue(`nerveBlocks.${idx}.side`, v as NerveBlockSide)}
+                      >
+                        <SelectTrigger className="h-11 text-sm">
+                          <SelectValue placeholder="Left / Right" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {NERVE_BLOCK_SIDE_OPTIONS.map((s) => (
+                            <SelectItem key={s} value={s}>
+                              {s}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -484,11 +520,15 @@ export function Step2Patient() {
                       </Select>
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-medium">Dose</Label>
+                      <Label className="text-xs font-medium">Volume (mL)</Label>
                       <Input
-                        placeholder="e.g. 2 mL"
+                        type="number"
+                        min="0"
+                        step="0.5"
+                        inputMode="decimal"
+                        placeholder="e.g. 5"
                         className="h-11 text-sm"
-                        {...register(`nerveBlocks.${idx}.dose`)}
+                        {...register(`nerveBlocks.${idx}.volume`)}
                       />
                     </div>
                   </div>

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useFormContext } from 'react-hook-form';
-import { Bone, Activity, Eye } from 'lucide-react';
+import { Bone, Activity, Eye, Camera } from 'lucide-react';
 
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -35,12 +35,14 @@ import { ToothExamPanel } from '@/components/dental/ToothExamPanel';
 import { DentalLegend } from '@/components/dental/DentalLegend';
 import { DENTAL_CHART_SIDES, createEmptyFinding } from '@/components/dental/dentalData';
 import { ExamMeasurementsSection } from './exam-measurements';
+import { PhotoUpload } from './photo-upload';
 
 export function Step3Charting() {
   const { watch, setValue, register } = useFormContext<DentalReportData>();
   const pathologies = watch('pathologies');
   const softTissue = watch('softTissue');
   const teethData = watch('teeth');
+  const photos = watch('photos');
   const [selectedTooth, setSelectedTooth] = useState<string | null>(null);
 
   const selectedFinding = selectedTooth ? teethData[selectedTooth] ?? createEmptyFinding(selectedTooth) : null;
@@ -80,7 +82,7 @@ export function Step3Charting() {
           Dental Examination Charting
         </h2>
         <p className="mt-1 text-sm text-slate-500">
-          Tap a tooth to log its status and findings. Toggle whole-horse pathologies below.
+          Tap a tooth to log its status and findings. Whole-mouth (arcade-level) findings are below.
         </p>
       </div>
 
@@ -145,9 +147,9 @@ export function Step3Charting() {
               <Activity className="h-4 w-4" />
             </div>
             <div>
-              <CardTitle className="text-lg">Common Pathologies</CardTitle>
+              <CardTitle className="text-lg">Whole-Mouth Findings</CardTitle>
               <CardDescription>
-                Toggle any findings observed during examination
+                Arcade-level conditions only — anything on a single tooth is charted on that tooth above
               </CardDescription>
             </div>
           </div>
@@ -234,6 +236,26 @@ export function Step3Charting() {
               );
             })}
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Clinical photographs */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-primary">
+              <Camera className="h-4 w-4" />
+            </div>
+            <div>
+              <CardTitle className="text-lg">Clinical Photographs</CardTitle>
+              <CardDescription>
+                Intra-oral or facial photos to include in the report — add a caption and link to a tooth
+              </CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <PhotoUpload photos={photos} onChange={(next) => setValue('photos', next, { shouldDirty: true })} />
         </CardContent>
       </Card>
 

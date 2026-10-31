@@ -8,19 +8,14 @@
 /** A single selectable examination status. Data-driven, not hard-coded
  * into components — add/remove/reorder entries in `dentalData.ts` and
  * every component (legend, select, visual state) picks it up. */
-export type ToothStatus =
-  | 'normal'
-  | 'abnormal'
-  | 'missing'
-  | 'extracted'
-  | 'fractured'
-  | 'caries'
-  | 'periodontal-disease'
-  | 'eruption-issue'
-  | 'malocclusion'
-  | 'overgrowth'
-  | 'painful'
-  | 'other';
+/**
+ * Status answers only two questions — is the tooth present, and is it
+ * normal. *What* is wrong lives in the multi-select `findings` list, so a
+ * tooth that is fractured AND carious can be recorded faithfully. "Not
+ * examined" is `examined: false`, not a status. Legacy values (fractured,
+ * caries, …) are migrated in lib/storage.ts.
+ */
+export type ToothStatus = 'normal' | 'abnormal' | 'absent' | 'extracted';
 
 export interface ToothStatusOption {
   value: ToothStatus;
@@ -43,6 +38,32 @@ export interface ToothStatusOption {
 
 export type ToothSeverity = 'Mild' | 'Moderate' | 'Severe' | '';
 
+/** Canonical per-tooth lesion vocabulary — the single source for the exam
+ * panel checklist, the report, and legacy migration. Kept here (not in
+ * dentalData.ts) so `ToothFinding` can reference it without a cycle. */
+export const TOOTH_FINDING_OPTIONS = [
+  'Sharp enamel points',
+  'Hook',
+  'Ramp',
+  'Step',
+  'Wave',
+  'Excessive transverse ridges (ETR)',
+  'Overgrowth',
+  'Retained deciduous cap',
+  'Cap fragment',
+  'Impacted / delayed eruption',
+  'Supernumerary',
+  'Fracture',
+  'Pulp exposure',
+  'Mobile tooth',
+  'Diastema / feed packing',
+  'Periodontal pocket',
+  'Caries — infundibular',
+  'Caries — peripheral',
+] as const;
+
+export type ToothFindingLabel = (typeof TOOTH_FINDING_OPTIONS)[number];
+
 /** The examination record for one tooth. This is the source of truth —
  * the SVG only ever reads from this, never stores exam data itself. */
 export interface ToothFinding {
@@ -50,7 +71,9 @@ export interface ToothFinding {
   examined: boolean;
   status: ToothStatus;
   /** Checklist of specific findings (from TOOTH_FINDING_OPTIONS), not
-   * free text — keeps charting consistent across exams/practitioners. */
+   * free text — keeps charting consistent across exams/practitioners.
+   * This is the ONLY place a tooth-level lesion is named (the status is
+   * deliberately coarse), so each lesion has exactly one spelling. */
   findings: string[];
   severity: ToothSeverity;
   treatment: string;
