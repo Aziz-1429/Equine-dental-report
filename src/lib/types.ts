@@ -208,11 +208,17 @@ export const BCS_OPTIONS = [
   '8 — Fat', '9 — Extremely Fat',
 ] as const;
 
-/** Whole-mouth (arcade-level) findings only. Anything that belongs to a
- * single tooth — points, hooks, fractures, caries, diastemata — is charted
- * on that tooth via TOOTH_FINDING_OPTIONS, so one lesion never appears in
- * two lists under two spellings. */
+/** Whole-mouth (arcade-level) findings: conditions that are normally
+ * recorded for the arcade as a whole (sharp points along a row, hooks,
+ * ramps, wave…). A lesion on ONE specific tooth is charted on that tooth
+ * via TOOTH_FINDING_OPTIONS; the spellings are kept identical so the
+ * report reads consistently. */
 export const PATHOLOGY_OPTIONS = [
+  'Sharp enamel points',
+  'Hooks',
+  'Ramps',
+  'Excessive transverse ridges',
+  'Multiple diastemata',
   'Wave mouth',
   'Shear mouth',
   'Step mouth',
