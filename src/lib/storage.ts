@@ -178,12 +178,7 @@ function normalizeExamMeasurements(
   if (!saved) return fallback;
   const angle = (key: 'molarAngleFarside' | 'incisorAngle' | 'molarAngleNearside') => {
     const s = (saved[key] ?? {}) as Partial<DentalReportData['examMeasurements'][typeof key]>;
-    return {
-      before: normalizeTableAngle(s.before),
-      after: normalizeTableAngle(s.after),
-      beforeDegrees: s.beforeDegrees ?? '',
-      afterDegrees: s.afterDegrees ?? '',
-    };
+    return { before: normalizeTableAngle(s.before), after: normalizeTableAngle(s.after) };
   };
   return {
     ...fallback,
@@ -228,6 +223,9 @@ export function normalizeReport(parsed: Partial<DentalReportData> | null | undef
     nerveBlocks: normalizeNerveBlocks(parsed.nerveBlocks, base.nerveBlocks),
     examMeasurements: normalizeExamMeasurements(parsed.examMeasurements, base.examMeasurements),
     photos: normalizePhotos(raw.photos),
+    recommendations: Array.isArray(raw.recommendations)
+      ? (raw.recommendations as unknown[]).filter((r): r is string => typeof r === 'string')
+      : [],
   };
 }
 

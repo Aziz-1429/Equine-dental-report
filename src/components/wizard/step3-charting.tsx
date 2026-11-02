@@ -149,7 +149,7 @@ export function Step3Charting() {
             <div>
               <CardTitle className="text-lg">Whole-Mouth Findings</CardTitle>
               <CardDescription>
-                Arcade-level conditions only — anything on a single tooth is charted on that tooth above
+                Conditions affecting the arcade as a whole — a lesion on one specific tooth is charted on that tooth above
               </CardDescription>
             </div>
           </div>

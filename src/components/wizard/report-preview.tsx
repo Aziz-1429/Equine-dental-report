@@ -167,16 +167,8 @@ function hasExamMeasurements(data: DentalReportData): boolean {
   return Boolean(
     m.farside.excursion || m.nearside.excursion || m.rostrocaudalExcursion ||
     m.molarAngleFarside.before || m.incisorAngle.before || m.molarAngleNearside.before ||
-    m.molarAngleFarside.beforeDegrees || m.incisorAngle.beforeDegrees || m.molarAngleNearside.beforeDegrees ||
     m.tmjPainFarside || m.tmjPainNearside
   );
-}
-
-/** "Steep (22°)" when a measured value exists, otherwise just the pill. */
-function angleText(qualitative: string, degrees: string): string {
-  if (qualitative && degrees) return `${qualitative} (${degrees}°)`;
-  if (degrees) return `${degrees}°`;
-  return qualitative;
 }
 
 function ExamMeasurementsBlock({ data }: { data: DentalReportData }) {
@@ -228,8 +220,8 @@ function ExamMeasurementsBlock({ data }: { data: DentalReportData }) {
           <tr>
             {([m.molarAngleFarside, m.incisorAngle, m.molarAngleNearside] as const).map((a, i) => (
               <td key={i} style={{ padding: '6px', border: `0.5px solid ${SECONDARY_COLOR}`, verticalAlign: 'top' }}>
-                <PillRow label="Before Dental Work" value={angleText(a.before, a.beforeDegrees)} />
-                <PillRow label="After Dental Work" value={angleText(a.after, a.afterDegrees)} />
+                <PillRow label="Before Dental Work" value={a.before} />
+                <PillRow label="After Dental Work" value={a.after} />
               </td>
             ))}
           </tr>
@@ -486,10 +478,19 @@ export function ReportPreview({ data }: { data: DentalReportData }) {
         <div style={{ display: 'flex', flexWrap: 'wrap' }}>
           <FieldBox label="Follow-Up Timeline" value={data.followUpTimeline} />
         </div>
-        {data.additionalNotes && (
+        {((data.recommendations ?? []).length > 0 || data.additionalNotes) && (
           <>
             <div style={{ fontSize: 10, fontWeight: 700, color: BRAND_COLOR, marginTop: 8, marginBottom: 4 }}>Instructions &amp; Recommendations</div>
-            <div style={{ border: `0.5px solid ${SECONDARY_COLOR}`, borderRadius: 4, padding: 10, backgroundColor: '#fafafa', fontSize: 10, color: '#334155', lineHeight: 1.5 }}>{data.additionalNotes}</div>
+            <div style={{ border: `0.5px solid ${SECONDARY_COLOR}`, borderRadius: 4, padding: 10, backgroundColor: '#fafafa', fontSize: 10, color: '#334155', lineHeight: 1.5 }}>
+              {(data.recommendations ?? []).length > 0 && (
+                <ul style={{ margin: 0, paddingLeft: 14, marginBottom: data.additionalNotes ? 6 : 0 }}>
+                  {data.recommendations.map((r) => (
+                    <li key={r} style={{ marginBottom: 2 }}>{r}</li>
+                  ))}
+                </ul>
+              )}
+              {data.additionalNotes && <div style={{ whiteSpace: 'pre-wrap' }}>{data.additionalNotes}</div>}
+            </div>
           </>
         )}
       </div>

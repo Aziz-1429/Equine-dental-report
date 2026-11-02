@@ -18,7 +18,49 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { DentalReportData, FOLLOW_UP_OPTIONS, TreatmentPerformed } from '@/lib/types';
+import { cn } from '@/lib/utils';
+import { DentalReportData, FOLLOW_UP_OPTIONS, RECOMMENDATION_GROUPS, TreatmentPerformed } from '@/lib/types';
+
+/** Grouped quick-pick client instructions — each tick becomes a bullet
+ * in the report's Instructions & Recommendations block. */
+function RecommendationPicker({ value, onChange }: { value: string[]; onChange: (next: string[]) => void }) {
+  const toggle = (item: string) =>
+    onChange(value.includes(item) ? value.filter((v) => v !== item) : [...value, item]);
+
+  return (
+    <div className="space-y-4">
+      {RECOMMENDATION_GROUPS.map((group) => (
+        <div key={group.title} className="space-y-1.5">
+          <p className="text-xs font-bold uppercase tracking-widest text-slate-400">{group.title}</p>
+          <div className="space-y-1">
+            {group.items.map((item) => {
+              const checked = value.includes(item);
+              return (
+                <label
+                  key={item}
+                  className={cn(
+                    'flex cursor-pointer items-start gap-2.5 rounded-lg border p-2.5 text-sm leading-snug transition-colors touch-target',
+                    checked
+                      ? 'border-primary bg-primary/5 text-slate-900 dark:text-white'
+                      : 'border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-400 dark:hover:bg-slate-800'
+                  )}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => toggle(item)}
+                    className="mt-0.5 h-4 w-4 shrink-0 rounded border-slate-300 text-primary focus:ring-primary"
+                  />
+                  {item}
+                </label>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 function ProceduresDropdown({
   treatments,
@@ -60,6 +102,7 @@ function ProceduresDropdown({
 export function Step4Treatment() {
   const { watch, setValue, register } = useFormContext<DentalReportData>();
   const treatments = watch('treatments');
+  const recommendations = watch('recommendations');
 
   const toggleTreatment = (idx: number) => {
     const current = treatments[idx];
@@ -136,16 +179,23 @@ export function Step4Treatment() {
             </div>
             <div>
               <CardTitle className="text-lg">Instructions &amp; Recommendations</CardTitle>
-              <CardDescription>Anything else the client should know</CardDescription>
+              <CardDescription>Tick the standard instructions that apply, then add anything specific below</CardDescription>
             </div>
           </div>
         </CardHeader>
-        <CardContent>
-          <Textarea
-            placeholder="e.g. Transition to soaked hay pellets due to reduced grinding surface. Recommend re-check of EOTRH progression at next visit..."
-            className="min-h-[100px] text-base"
-            {...register('additionalNotes')}
+        <CardContent className="space-y-5">
+          <RecommendationPicker
+            value={recommendations}
+            onChange={(next) => setValue('recommendations', next, { shouldDirty: true })}
           />
+          <div className="space-y-1.5">
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-400">Additional instructions</p>
+            <Textarea
+              placeholder="e.g. Transition to soaked hay pellets due to reduced grinding surface. Recommend re-check of EOTRH progression at next visit..."
+              className="min-h-[100px] text-base"
+              {...register('additionalNotes')}
+            />
+          </div>
         </CardContent>
       </Card>
     </div>
