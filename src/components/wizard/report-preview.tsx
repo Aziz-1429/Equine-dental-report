@@ -128,6 +128,9 @@ function truncateToWidth(text: string, maxWidth: number, weight: number, size: n
 
 const VALUE_MAX_WIDTH = 280;
 
+/** Height of each photo cell in the report (two per row). */
+const PHOTO_BOX_HEIGHT = 230;
+
 function FieldBox({ label, value }: { label: string; value: string }) {
   const weight = value ? 500 : 400;
   const display = truncateToWidth(value || '—', VALUE_MAX_WIDTH, weight, 11);
@@ -273,7 +276,7 @@ function toothFindingsList(teeth: Record<string, ToothFinding>) {
     .sort((a, b) => Number(a.toothNumber) - Number(b.toothNumber));
 }
 
-export function ReportPreview({ data }: { data: DentalReportData }) {
+export function ReportPreview({ data, id = 'pdf-report-content' }: { data: DentalReportData; id?: string }) {
   const toothFindings = toothFindingsList(data.teeth);
   const checkedPathologies = data.pathologies.filter((p) => p.checked);
   const checkedSoftTissue = data.softTissue.filter((s) => s.checked);
@@ -293,10 +296,17 @@ export function ReportPreview({ data }: { data: DentalReportData }) {
   // lib/pdfDentalChart.ts) and title banner are deliberately excluded
   // from this list, so a page break can only ever fall BETWEEN two
   // sections, never through the middle of one.
-  const sectionStyle = { padding: '0 40px', backgroundColor: '#ffffff' } as const;
+  // The 1px top/bottom padding is load-bearing: it stops the first
+  // child's top margin (SectionTitle's 14px) and the last child's bottom
+  // margin from collapsing OUT of the section. html2canvas lays the
+  // cloned section out in isolation, where those margins no longer
+  // collapse, so without the padding its content lands ~14px lower than
+  // the DOM box it was measured from and the bottom line (a photo
+  // caption, say) is sliced off.
+  const sectionStyle = { padding: '1px 40px 1px', backgroundColor: '#ffffff' } as const;
 
   return (
-    <div id="pdf-report-content" style={{ width: '794px', backgroundColor: '#ffffff', fontFamily: 'Helvetica, Arial, sans-serif', color: '#1e293b', fontSize: 10, lineHeight: 1.4, boxSizing: 'border-box' }}>
+    <div id={id} style={{ width: '794px', backgroundColor: '#ffffff', fontFamily: 'Helvetica, Arial, sans-serif', color: '#1e293b', fontSize: 10, lineHeight: 1.4, boxSizing: 'border-box' }}>
       {/* Shown in the on-screen/inline preview only — the real PDF draws
           its own vector header + title banner on every page instead. */}
       <LetterheadHeader />
@@ -458,11 +468,28 @@ export function ReportPreview({ data }: { data: DentalReportData }) {
                 const label = [photo.toothNumber ? `Tooth ${photo.toothNumber}` : '', photo.caption].filter(Boolean).join(' — ');
                 return (
                   <div key={photo.id} style={{ width: '50%', boxSizing: 'border-box' }}>
-                    <div style={{ border: `0.5px solid ${SECONDARY_COLOR}`, borderRadius: 4, overflow: 'hidden', backgroundColor: '#fafafa', height: 230, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      {/* eslint-disable-next-line @next/next/no-img-element -- embedded data URL for PDF capture */}
-                      <img src={photo.dataUrl} alt={label || `Clinical photograph ${n}`} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block' }} />
-                    </div>
-                    <div style={{ fontSize: 9, color: '#334155', marginTop: 4, lineHeight: 1.35 }}>
+                    {/* Fixed-size box with the photo as a `background-image:
+                        contain` rather than an <img object-fit>: html2canvas
+                        (which rasterizes this for the PDF) honours
+                        background-size but not object-fit, so a portrait
+                        photo would otherwise be stretched to fill the box. */}
+                    <div
+                      role="img"
+                      aria-label={label || `Clinical photograph ${n}`}
+                      style={{
+                        border: `0.5px solid ${SECONDARY_COLOR}`,
+                        borderRadius: 4,
+                        backgroundColor: '#fafafa',
+                        width: '100%',
+                        height: PHOTO_BOX_HEIGHT,
+                        boxSizing: 'border-box',
+                        backgroundImage: `url(${photo.dataUrl})`,
+                        backgroundSize: 'contain',
+                        backgroundRepeat: 'no-repeat',
+                        backgroundPosition: 'center',
+                      }}
+                    />
+                    <div style={{ fontSize: 9.5, color: '#334155', marginTop: 5, lineHeight: 1.4, paddingBottom: 2 }}>
                       <span style={{ fontWeight: 700, color: BRAND_COLOR }}>Fig. {n}.</span> {label || '—'}
                     </div>
                   </div>

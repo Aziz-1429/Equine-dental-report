@@ -18,6 +18,8 @@ import { ReportPreview } from './report-preview';
 import { DentalReportData } from '@/lib/types';
 import { saveReport } from '@/lib/supabase';
 
+const PRINT_COPY_ID = 'pdf-report-print';
+
 export function Step5Finalize({ dbId }: { dbId?: string | null }) {
   const { watch } = useFormContext<DentalReportData>();
   const [showPreview, setShowPreview] = useState(false);
@@ -48,7 +50,10 @@ export function Step5Finalize({ dbId }: { dbId?: string | null }) {
       const { renderDentalChartPage, stampPageFooters, drawLetterheadHeader, drawTitleBanner } =
         await import('@/lib/pdfDentalChart');
 
-      const container = document.getElementById('pdf-report-content');
+      // Always rasterize the dedicated off-screen copy (never the
+      // on-screen preview, which sits inside a scrollable card and can be
+      // partially clipped by its viewport when captured).
+      const container = document.getElementById(PRINT_COPY_ID);
       if (!container) return;
       const sections = Array.from(container.querySelectorAll<HTMLElement>('[data-pdf-section]'));
 
@@ -82,10 +87,18 @@ export function Step5Finalize({ dbId }: { dbId?: string | null }) {
       // section alone is taller than a full page, handled by the slicing
       // fallback below.
       for (const section of sections) {
+        // html2canvas only paints what fits in the "window" it is told
+        // about, and the off-screen report lives far outside the real
+        // viewport — so a section taller than the browser window (a row
+        // of photos on a phone, say) would come back with its bottom
+        // sliced off. Size the capture to the section itself.
+        const rect = section.getBoundingClientRect();
         const canvas = await html2canvas(section, {
           scale: 2,
           useCORS: true,
           backgroundColor: '#ffffff',
+          windowWidth: Math.max(window.innerWidth, Math.ceil(rect.right) + 100),
+          windowHeight: Math.max(window.innerHeight, Math.ceil(rect.bottom) + 100),
         });
         const imgData = canvas.toDataURL('image/png');
         const imgHeight = (canvas.height * pdfWidth) / canvas.width;
@@ -284,7 +297,7 @@ export function Step5Finalize({ dbId }: { dbId?: string | null }) {
           pointerEvents: 'none',
         }}
       >
-        <ReportPreview data={formData} />
+        <ReportPreview data={formData} id={PRINT_COPY_ID} />
       </div>
     </div>
   );
