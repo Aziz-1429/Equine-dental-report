@@ -14,39 +14,93 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { cn } from '@/lib/utils';
-import { TOOTH_STATUS_OPTIONS, TOOTH_FINDING_OPTIONS, TOOTH_SEVERITY_OPTIONS, isWolfTooth } from './dentalData';
-import { ToothFinding, ToothStatus, ToothSeverity } from './dentalTypes';
+import {
+  TOOTH_STATUS_OPTIONS,
+  TOOTH_FINDING_CATALOG,
+  TOOTH_SEVERITY_OPTIONS,
+  INFUNDIBULAR_CARIES_CODE,
+  INFUNDIBULAR_CARIES_GRADES,
+  findingLabel,
+  isWolfTooth,
+} from './dentalData';
+import { InfundibularCariesGrade, ToothFinding, ToothStatus, ToothSeverity } from './dentalTypes';
 
+/** Checklist of finding CODES. The summary shows the codes that are
+ * ticked (e.g. "PTS, HK") so the doctor sees the shorthand every time. */
 function FindingsDropdown({ value, onChange }: { value: string[]; onChange: (next: string[]) => void }) {
-  const toggle = (option: string) => {
-    onChange(value.includes(option) ? value.filter((v) => v !== option) : [...value, option]);
+  const toggle = (code: string) => {
+    onChange(value.includes(code) ? value.filter((v) => v !== code) : [...value, code]);
   };
 
   return (
     <details className="group rounded-lg border border-slate-200 dark:border-slate-700">
-      <summary className="flex h-10 cursor-pointer list-none items-center justify-between rounded-lg px-3 text-xs text-slate-700 dark:text-slate-300 [&::-webkit-details-marker]:hidden">
-        <span className={value.length === 0 ? 'text-slate-400' : ''}>
-          {value.length === 0 ? 'Select findings' : `${value.length} selected`}
+      <summary className="flex min-h-10 cursor-pointer list-none items-center justify-between gap-2 rounded-lg px-3 py-2 text-xs text-slate-700 dark:text-slate-300 [&::-webkit-details-marker]:hidden">
+        <span className={value.length === 0 ? 'text-slate-400' : 'font-semibold'}>
+          {value.length === 0 ? 'Select findings' : value.join(', ')}
         </span>
         <ChevronDown className="h-4 w-4 shrink-0 text-slate-400 transition-transform group-open:rotate-180" />
       </summary>
-      <div className="space-y-1 border-t border-slate-200 p-2 dark:border-slate-700">
-        {TOOTH_FINDING_OPTIONS.map((option) => (
+      <div className="space-y-0.5 border-t border-slate-200 p-2 dark:border-slate-700">
+        {TOOTH_FINDING_CATALOG.map((option) => (
           <label
-            key={option}
+            key={option.code}
             className="flex items-center gap-2.5 rounded-md p-2 text-xs text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
           >
             <input
               type="checkbox"
-              checked={value.includes(option)}
-              onChange={() => toggle(option)}
+              checked={value.includes(option.code)}
+              onChange={() => toggle(option.code)}
               className="h-3.5 w-3.5 rounded border-slate-300 text-primary focus:ring-primary"
             />
-            {option}
+            <span className="w-16 shrink-0 font-mono text-[11px] font-bold text-primary">{option.code}</span>
+            <span>{option.name}</span>
           </label>
         ))}
       </div>
     </details>
+  );
+}
+
+/** Grade 0–4 picker, shown only when INF/CA is ticked on the tooth. */
+function InfundibularCariesGradePicker({
+  value,
+  onChange,
+}: {
+  value: InfundibularCariesGrade;
+  onChange: (grade: InfundibularCariesGrade) => void;
+}) {
+  return (
+    <div className="space-y-2 rounded-lg border border-rose-200 bg-rose-50 p-3 dark:border-rose-900 dark:bg-rose-950/40">
+      <div className="flex items-center justify-between">
+        <Label className="text-xs font-semibold text-rose-800 dark:text-rose-300">
+          {findingLabel(INFUNDIBULAR_CARIES_CODE)} — Grade
+        </Label>
+        {!value && <span className="text-[11px] font-medium text-rose-600">Required</span>}
+      </div>
+      <div className="flex gap-1.5">
+        {INFUNDIBULAR_CARIES_GRADES.map((g) => (
+          <button
+            key={g.grade}
+            type="button"
+            onClick={() => onChange(g.grade)}
+            title={g.description}
+            className={cn(
+              'h-9 flex-1 rounded-md border text-sm font-bold transition-colors',
+              value === g.grade
+                ? 'border-transparent bg-rose-600 text-white'
+                : 'border-rose-300 bg-white text-rose-700 hover:bg-rose-100 dark:border-rose-800 dark:bg-slate-900 dark:text-rose-300'
+            )}
+          >
+            {g.grade}
+          </button>
+        ))}
+      </div>
+      <p className="text-[11px] leading-snug text-rose-700/90 dark:text-rose-400/90">
+        {value
+          ? INFUNDIBULAR_CARIES_GRADES.find((g) => g.grade === value)?.description
+          : '0 normal · 1 cementum · 2 cementum + enamel · 3 cementum, enamel + dentine · 4 tooth integrity affected (secondary fracture)'}
+      </p>
+    </div>
   );
 }
 
@@ -207,10 +261,18 @@ export function ToothExamPanel({ finding, onChange, onMarkStatus, onClear, onClo
               onChange({
                 findings: next,
                 examined: true,
+                // grade only makes sense while INF/CA is ticked
+                ...(next.includes(INFUNDIBULAR_CARIES_CODE) ? {} : { infundibularCariesGrade: '' as InfundibularCariesGrade }),
                 ...(next.length > 0 && finding.status === 'normal' ? { status: 'abnormal' as ToothStatus } : {}),
               })
             }
           />
+          {finding.findings.includes(INFUNDIBULAR_CARIES_CODE) && (
+            <InfundibularCariesGradePicker
+              value={finding.infundibularCariesGrade}
+              onChange={(grade) => onChange({ infundibularCariesGrade: grade, examined: true })}
+            />
+          )}
         </div>
 
         <div className="space-y-1.5">

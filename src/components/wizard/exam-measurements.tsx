@@ -3,7 +3,6 @@
 import { useFormContext } from 'react-hook-form';
 import { Info, Ruler } from 'lucide-react';
 
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -23,6 +22,7 @@ import { cn } from '@/lib/utils';
 import {
   DentalReportData,
   LATERAL_EXCURSION_OPTIONS,
+  OCCLUSAL_CONTACT_OPTIONS,
   ROSTROCAUDAL_EXCURSION_OPTIONS,
   TABLE_ANGLE_OPTIONS,
   TMJ_PAIN_OPTIONS,
@@ -89,9 +89,10 @@ const HINTS = {
   ),
   occlusion: (
     <>
-      How far the mandible slides before the cheek teeth make contact, relative to what is normal for this horse.
-      Record it the same way before and after floating so the change is visible. (In the literature this is
-      measured as a distance — mean ≈ 12 mm, range 4–30 mm.)
+      With the jaw at rest and then during the excursion, how much of the cheek-tooth arcade is actually meeting
+      its opposite. <b>Full</b> — contact along the whole arcade. <b>Partial</b> — some teeth not in contact
+      (e.g. around a wave or step). <b>Minimal</b> — only one or two points touching. Record before and after
+      floating so the change is visible.
     </>
   ),
   rostrocaudal: (
@@ -136,7 +137,7 @@ function TableAngleBlock({ title, angleKey }: { title: string; angleKey: AngleKe
 }
 
 export function ExamMeasurementsSection() {
-  const { watch, setValue, register } = useFormContext<DentalReportData>();
+  const { watch, setValue } = useFormContext<DentalReportData>();
   const m = watch('examMeasurements');
 
   return (
@@ -174,23 +175,21 @@ export function ExamMeasurementsSection() {
                 onChange={(v) => setValue('examMeasurements.farside.postDentalExcursion', v)}
               />
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <Label className="text-xs font-medium">Percent of Occlusion</Label>
-                <Input
-                  placeholder="e.g. 90%"
-                  className="h-9 text-sm"
-                  {...register('examMeasurements.farside.percentOcclusion')}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs font-medium">Post Dental</Label>
-                <Input
-                  placeholder="e.g. 95%"
-                  className="h-9 text-sm"
-                  {...register('examMeasurements.farside.postDentalPercentOcclusion')}
-                />
-              </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Occlusal Contact</Label>
+              <PillGroup
+                options={OCCLUSAL_CONTACT_OPTIONS}
+                value={m.farside.occlusalContact}
+                onChange={(v) => setValue('examMeasurements.farside.occlusalContact', v)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Occlusal Contact — Post Dental Work</Label>
+              <PillGroup
+                options={OCCLUSAL_CONTACT_OPTIONS}
+                value={m.farside.postDentalOcclusalContact}
+                onChange={(v) => setValue('examMeasurements.farside.postDentalOcclusalContact', v)}
+              />
             </div>
             <Hint>{HINTS.occlusion}</Hint>
           </div>
@@ -234,23 +233,21 @@ export function ExamMeasurementsSection() {
                 onChange={(v) => setValue('examMeasurements.nearside.postDentalExcursion', v)}
               />
             </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <Label className="text-xs font-medium">Percent of Occlusion</Label>
-                <Input
-                  placeholder="e.g. 85%"
-                  className="h-9 text-sm"
-                  {...register('examMeasurements.nearside.percentOcclusion')}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label className="text-xs font-medium">Post Dental</Label>
-                <Input
-                  placeholder="e.g. 95%"
-                  className="h-9 text-sm"
-                  {...register('examMeasurements.nearside.postDentalPercentOcclusion')}
-                />
-              </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Occlusal Contact</Label>
+              <PillGroup
+                options={OCCLUSAL_CONTACT_OPTIONS}
+                value={m.nearside.occlusalContact}
+                onChange={(v) => setValue('examMeasurements.nearside.occlusalContact', v)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label className="text-xs font-semibold">Occlusal Contact — Post Dental Work</Label>
+              <PillGroup
+                options={OCCLUSAL_CONTACT_OPTIONS}
+                value={m.nearside.postDentalOcclusalContact}
+                onChange={(v) => setValue('examMeasurements.nearside.postDentalOcclusalContact', v)}
+              />
             </div>
           </div>
         </div>

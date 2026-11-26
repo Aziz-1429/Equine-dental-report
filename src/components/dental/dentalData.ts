@@ -75,7 +75,13 @@ export function getOutlineHex(status: ToothStatus): string {
 
 /** Re-exported so existing imports keep working; the list itself lives
  * next to the ToothFinding type in dentalTypes.ts. */
-export { TOOTH_FINDING_OPTIONS } from './dentalTypes';
+export {
+  TOOTH_FINDING_OPTIONS,
+  TOOTH_FINDING_CATALOG,
+  findingLabel,
+  INFUNDIBULAR_CARIES_CODE,
+  INFUNDIBULAR_CARIES_GRADES,
+} from './dentalTypes';
 
 export const TOOTH_SEVERITY_OPTIONS = ['Mild', 'Moderate', 'Severe'] as const;
 
@@ -308,6 +314,7 @@ export function createEmptyFinding(toothNumber: string): ToothFinding {
     examined: false,
     status: 'normal',
     findings: [],
+    infundibularCariesGrade: '',
     severity: '',
     treatment: '',
     recommendation: '',

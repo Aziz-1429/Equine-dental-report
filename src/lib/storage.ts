@@ -1,14 +1,19 @@
 import {
+  CodedOption,
   DentalReportData,
   NerveBlockEntry,
+  OcclusalContact,
+  PATHOLOGY_CATALOG,
   PathologyFinding,
   ReportPhoto,
+  SOFT_TISSUE_CATALOG,
   TableAngle,
   ToothFinding,
   TreatmentPerformed,
+  codedLabel,
   createInitialReport,
 } from './types';
-import { ToothStatus } from '@/components/dental/dentalTypes';
+import { INFUNDIBULAR_CARIES_CODE, TOOTH_FINDING_OPTIONS, ToothStatus } from '@/components/dental/dentalTypes';
 
 const STORAGE_KEY = 'equine-dental-report-draft';
 const SAVED_KEY = 'equine-dental-report-saved-at';
@@ -25,12 +30,12 @@ const SAVED_KEY = 'equine-dental-report-saved-at';
 // rather than guessed.
 // ---------------------------------------------------------------------------
 
-/** Legacy per-tooth statuses that were really lesions → new finding label. */
+/** Legacy per-tooth statuses that were really lesions → finding CODE. */
 const LEGACY_STATUS_TO_FINDING: Record<string, string> = {
-  fractured: 'Fracture',
-  'periodontal-disease': 'Periodontal pocket',
-  'eruption-issue': 'Impacted / delayed eruption',
-  overgrowth: 'Overgrowth',
+  fractured: 'FX',
+  'periodontal-disease': 'PP',
+  'eruption-issue': 'TU',
+  overgrowth: 'TO',
 };
 
 /** Legacy statuses that carry information but map to no single finding. */
@@ -41,15 +46,33 @@ const LEGACY_STATUS_TO_NOTE: Record<string, string> = {
   other: 'Other abnormality',
 };
 
-/** Old finding spellings → canonical label. */
-const LEGACY_FINDING_RENAMES: Record<string, string> = {
-  'excessive transverse ridges (etr)': 'Excessive transverse ridges (ETR)',
-  'sharp enamel points': 'Sharp enamel points',
-  'step mouth': 'Step',
-  'wave mouth': 'Wave',
-  'periodontal pocket': 'Periodontal pocket',
-  'diastema / feed packing': 'Diastema / feed packing',
+/** Every earlier spelling of a per-tooth finding (lower-cased) → the
+ * reference CODE now stored. Findings were stored by name until the
+ * clinic's illustrated code reference was adopted. */
+const LEGACY_FINDING_TO_CODE: Record<string, string> = {
+  'sharp enamel points': 'PTS',
+  hook: 'HK',
+  ramp: 'RMP',
+  step: 'STP',
+  'step mouth': 'STP',
+  wave: 'WV',
+  'wave mouth': 'WV',
+  'excessive transverse ridges (etr)': 'ETR',
+  'excessive transverse ridges': 'ETR',
+  overgrowth: 'TO',
+  'retained deciduous cap': 'RD',
+  'cap fragment': 'RD',
+  'impacted / delayed eruption': 'TU',
+  supernumerary: 'SN',
+  fracture: 'FX',
+  'pulp exposure': 'PE',
+  'mobile tooth': 'MOB',
+  'diastema / feed packing': 'DIA',
+  'periodontal pocket': 'PP',
+  'caries — infundibular': 'INF/CA',
+  'caries — peripheral': 'CA',
 };
+const KNOWN_FINDING_CODES = new Set(TOOTH_FINDING_OPTIONS);
 
 function appendNote(notes: string, extra: string): string {
   if (!extra || notes.includes(extra)) return notes;
@@ -88,17 +111,26 @@ export function migrateTooth(toothNumber: string, saved: Record<string, unknown>
       if (status === 'normal' || status === 'abnormal') status = 'absent';
       continue;
     }
-    findings.add(LEGACY_FINDING_RENAMES[key] ?? f);
+    // already a code → keep; old name → its code; anything else is kept
+    // verbatim so no recorded detail is lost (it shows as-is).
+    findings.add(KNOWN_FINDING_CODES.has(f) ? f : (LEGACY_FINDING_TO_CODE[key] ?? f));
   }
 
   // A named lesion on a "normal" tooth is a contradiction — promote.
   if (findings.size > 0 && status === 'normal') status = 'abnormal';
+
+  const rawGrade = saved?.infundibularCariesGrade;
+  const infundibularCariesGrade =
+    findings.has(INFUNDIBULAR_CARIES_CODE) && typeof rawGrade === 'string' && ['0', '1', '2', '3', '4'].includes(rawGrade)
+      ? (rawGrade as ToothFinding['infundibularCariesGrade'])
+      : '';
 
   return {
     toothNumber,
     examined: typeof saved?.examined === 'boolean' ? saved.examined : Boolean(saved),
     status,
     findings: [...findings],
+    infundibularCariesGrade,
     severity: (saved?.severity as ToothFinding['severity']) ?? '',
     treatment: (saved?.treatment as string) ?? '',
     recommendation: (saved?.recommendation as string) ?? '',
@@ -119,14 +151,17 @@ function normalizeTeeth(
   return normalized;
 }
 
-/** Rebuilds a checklist (pathologies / treatments) against the CURRENT
- * option list, keeping any tick whose label still exists (case-insensitive).
- * Ticks for labels that no longer exist are dropped — they were either
- * mis-filed (a finding under "procedures") or renamed beyond safe
- * matching, and the per-tooth chart still holds the clinical detail. */
+/** Rebuilds a checklist (pathologies / soft tissue / treatments) against
+ * the CURRENT option list, keeping any tick whose label still exists
+ * (case-insensitive) — or, when `aliases` is given, whose label was an
+ * earlier spelling of the same entry. Ticks for labels that no longer
+ * exist are dropped — they were either mis-filed (a finding under
+ * "procedures") or renamed beyond safe matching, and the per-tooth chart
+ * still holds the clinical detail. */
 function normalizeChecklist<T extends { id: string; label: string; checked: boolean; note?: string }>(
   saved: unknown,
-  fallback: T[]
+  fallback: T[],
+  aliases?: (label: string) => string[]
 ): T[] {
   if (!Array.isArray(saved)) return fallback;
   const byLabel = new Map<string, { checked: boolean; note?: string }>();
@@ -139,9 +174,39 @@ function normalizeChecklist<T extends { id: string; label: string; checked: bool
     }
   }
   return fallback.map((item) => {
-    const match = byLabel.get(item.label.toLowerCase());
+    const keys = [item.label, ...(aliases ? aliases(item.label) : [])].map((k) => k.toLowerCase());
+    const match = keys.map((k) => byLabel.get(k)).find(Boolean);
     return match ? { ...item, checked: match.checked, ...(match.note ? { note: match.note } : {}) } : item;
   });
+}
+
+/** Earlier spellings of a coded checklist entry, from its catalog. */
+function catalogAliases(catalog: CodedOption[]) {
+  const byLabel = new Map<string, string[]>();
+  for (const o of catalog) {
+    const label = catalog === SOFT_TISSUE_CATALOG && o.name.endsWith('— normal') ? o.name : codedLabel(o);
+    byLabel.set(label, [o.name, ...(o.aliases ?? [])]);
+  }
+  return (label: string) => byLabel.get(label) ?? [];
+}
+
+function normalizeOcclusalContact(v: unknown): OcclusalContact {
+  return v === 'Full' || v === 'Partial' || v === 'Minimal' ? v : '';
+}
+
+function normalizeExcursion(
+  saved: Record<string, unknown> | undefined,
+  fallback: DentalReportData['examMeasurements']['farside']
+): DentalReportData['examMeasurements']['farside'] {
+  if (!saved) return fallback;
+  return {
+    excursion: (saved.excursion as typeof fallback.excursion) ?? '',
+    postDentalExcursion: (saved.postDentalExcursion as typeof fallback.excursion) ?? '',
+    // the old free-text "percent of occlusion" has no safe mapping to the
+    // new Full / Partial / Minimal pills, so it is left unset
+    occlusalContact: normalizeOcclusalContact(saved.occlusalContact),
+    postDentalOcclusalContact: normalizeOcclusalContact(saved.postDentalOcclusalContact),
+  };
 }
 
 const LEGACY_BLOCK_RENAMES: Record<string, string> = {
@@ -183,8 +248,8 @@ function normalizeExamMeasurements(
   return {
     ...fallback,
     ...saved,
-    farside: { ...fallback.farside, ...(saved.farside ?? {}) },
-    nearside: { ...fallback.nearside, ...(saved.nearside ?? {}) },
+    farside: normalizeExcursion(saved.farside as Record<string, unknown> | undefined, fallback.farside),
+    nearside: normalizeExcursion(saved.nearside as Record<string, unknown> | undefined, fallback.nearside),
     molarAngleFarside: angle('molarAngleFarside'),
     incisorAngle: angle('incisorAngle'),
     molarAngleNearside: angle('molarAngleNearside'),
@@ -217,9 +282,12 @@ export function normalizeReport(parsed: Partial<DentalReportData> | null | undef
     ...parsed,
     weightKg: typeof raw.weightKg === 'string' ? raw.weightKg : '',
     teeth: normalizeTeeth(parsed.teeth as Record<string, Record<string, unknown>> | undefined, base.teeth),
-    pathologies: normalizeChecklist<PathologyFinding>(parsed.pathologies, base.pathologies),
+    pathologies: normalizeChecklist<PathologyFinding>(parsed.pathologies, base.pathologies, catalogAliases(PATHOLOGY_CATALOG)),
     treatments: normalizeChecklist<TreatmentPerformed>(parsed.treatments, base.treatments),
-    softTissue: normalizeChecklist(parsed.softTissue, base.softTissue),
+    softTissue: normalizeChecklist(parsed.softTissue, base.softTissue, catalogAliases(SOFT_TISSUE_CATALOG)),
+    physicalExam: Array.isArray(raw.physicalExam)
+      ? (raw.physicalExam as unknown[]).filter((r): r is string => typeof r === 'string')
+      : [],
     nerveBlocks: normalizeNerveBlocks(parsed.nerveBlocks, base.nerveBlocks),
     examMeasurements: normalizeExamMeasurements(parsed.examMeasurements, base.examMeasurements),
     photos: normalizePhotos(raw.photos),
