@@ -61,12 +61,15 @@ export type LateralExcursion = 'Smooth' | 'Step' | 'Mouth opens to slide' | '';
 export type RostrocaudalExcursion = 'Normal' | 'Reduced' | 'Painful' | '';
 export type TableAngle = 'Flat' | 'Normal' | 'Steep' | '';
 export type TmjPainLevel = 'None' | 'Mild' | 'Moderate' | 'Severe' | '';
+/** Replaces the old free-text "Percent of occlusion": how much of the
+ * cheek-tooth arcade is in occlusal contact. */
+export type OcclusalContact = 'Full' | 'Partial' | 'Minimal' | '';
 
 export interface ExcursionAssessment {
   excursion: LateralExcursion;
   postDentalExcursion: LateralExcursion;
-  percentOcclusion: string;
-  postDentalPercentOcclusion: string;
+  occlusalContact: OcclusalContact;
+  postDentalOcclusalContact: OcclusalContact;
 }
 
 export interface TableAngleAssessment {
@@ -110,6 +113,8 @@ export interface DentalReportData {
   bodyConditionScore: string;
   color: string;
   history: string[];
+  /** Multi-select general / extra-oral physical examination findings. */
+  physicalExam: string[];
   sedationUsed: boolean;
   sedationDrugs: SedationEntry[];
   nerveBlockUsed: boolean;
@@ -180,6 +185,27 @@ export const HISTORY_OPTIONS = [
   'Previous dental treatment (date known)', 'Diet / forage change', 'Current medication',
 ] as const;
 
+export const PHYSICAL_EXAM_OPTIONS = [
+  'No abnormalities detected on physical examination',
+  'Poor body condition / weight loss',
+  'Facial asymmetry',
+  'Facial swelling — maxillary',
+  'Facial swelling — mandibular',
+  'Draining tract (facial / mandibular)',
+  'Nasal discharge — unilateral',
+  'Nasal discharge — bilateral',
+  'Submandibular lymph node enlargement',
+  'Halitosis',
+  'Quidding observed',
+  'Feed packing in cheeks',
+  'Masseter / temporal muscle asymmetry or atrophy',
+  'Pain on TMJ palpation',
+  'Head shy / resents handling of the head',
+  'Lip / commissure lesions (bit-related)',
+  'Ocular discharge',
+  'Elevated temperature',
+] as const;
+
 /** Regional anaesthesia named by the nerve actually blocked, not the
  * trunk. The "mandibular" block of older forms is the inferior alveolar
  * nerve at the mandibular foramen. */
@@ -208,36 +234,66 @@ export const BCS_OPTIONS = [
   '8 — Fat', '9 — Extremely Fat',
 ] as const;
 
+/** One whole-mouth or soft-tissue checklist entry: the stored `label`
+ * is "CODE — Name" today; `aliases` are earlier spellings of the same
+ * finding so old saved reports keep their ticks. */
+export interface CodedOption {
+  code: string;
+  name: string;
+  /** False for findings the clinic's reference has no code for (short
+   * clinic code used instead). */
+  fromReference: boolean;
+  aliases?: string[];
+}
+
+export function codedLabel(o: CodedOption): string {
+  return `${o.code} — ${o.name}`;
+}
+
 /** Whole-mouth (arcade-level) findings: conditions that are normally
  * recorded for the arcade as a whole (sharp points along a row, hooks,
  * ramps, wave…). A lesion on ONE specific tooth is charted on that tooth
- * via TOOTH_FINDING_OPTIONS; the spellings are kept identical so the
- * report reads consistently. */
-export const PATHOLOGY_OPTIONS = [
-  'Sharp enamel points',
-  'Hooks',
-  'Ramps',
-  'Excessive transverse ridges',
-  'Multiple diastemata',
-  'Wave mouth',
-  'Shear mouth',
-  'Step mouth',
-  'Smile (ventral curvature) incisors',
-  'Frown (dorsal curvature) incisors',
-  'Diagonal incisor malocclusion',
-  'Overjet (parrot mouth)',
-  'Underjet (sow mouth)',
-  'EOTRH',
-  'Generalised periodontal disease',
-  'Generalised oral ulceration',
-] as const;
+ * via TOOTH_FINDING_CATALOG; the codes are the same so the report reads
+ * consistently. */
+export const PATHOLOGY_CATALOG: CodedOption[] = [
+  { code: 'PTS', name: 'Sharp enamel points (generalised)', fromReference: true, aliases: ['Sharp enamel points'] },
+  { code: 'HK', name: 'Hooks', fromReference: true, aliases: ['Hooks'] },
+  { code: 'RMP', name: 'Ramps', fromReference: true, aliases: ['Ramps'] },
+  { code: 'ETR', name: 'Excessive transverse ridges', fromReference: true, aliases: ['Excessive transverse ridges'] },
+  { code: 'DIA', name: 'Multiple diastemata', fromReference: false, aliases: ['Multiple diastemata', 'Diastemata'] },
+  { code: 'WV', name: 'Wave mouth', fromReference: true, aliases: ['Wave mouth'] },
+  { code: 'STP', name: 'Step mouth', fromReference: true, aliases: ['Step mouth'] },
+  { code: 'SHR', name: 'Shear mouth', fromReference: false, aliases: ['Shear mouth'] },
+  { code: 'CV', name: 'Ventral curvature (smile) incisors', fromReference: true, aliases: ['Smile (ventral curvature) incisors'] },
+  { code: 'CD', name: 'Dorsal curvature (frown) incisors', fromReference: true, aliases: ['Frown (dorsal curvature) incisors'] },
+  { code: 'DGL/3', name: 'Diagonal incisor bite — lower left longer', fromReference: true, aliases: ['Diagonal incisor malocclusion'] },
+  { code: 'DGL/4', name: 'Diagonal incisor bite — lower right longer', fromReference: true },
+  { code: 'MAL2', name: 'Overbite / parrot mouth (mandibular brachygnathism)', fromReference: true, aliases: ['Overjet (parrot mouth)'] },
+  { code: 'MAL3', name: 'Underbite / sow mouth (mandibular prognathism)', fromReference: true, aliases: ['Underjet (sow mouth)'] },
+  { code: 'AB', name: 'Dental abrasion (bit / cribbing wear)', fromReference: true },
+  { code: 'EOTRH', name: 'EOTRH', fromReference: false, aliases: ['EOTRH'] },
+  { code: 'PD', name: 'Generalised periodontal disease', fromReference: true, aliases: ['Generalised periodontal disease', 'Periodontal disease'] },
+  { code: 'ULC', name: 'Generalised oral ulceration', fromReference: false, aliases: ['Generalised oral ulceration'] },
+];
 
-export const SOFT_TISSUE_OPTIONS = [
-  'Cheeks — normal', 'Cheeks — ulceration/laceration',
-  'Tongue — normal', 'Tongue — laceration/ulcer',
-  'Palate — normal', 'Palate — abnormal',
-  'Gingiva — normal', 'Gingiva — inflammation/recession',
-] as const;
+export const PATHOLOGY_OPTIONS: readonly string[] = PATHOLOGY_CATALOG.map(codedLabel);
+
+/** Soft-tissue pairs (normal / abnormal) consumed by index in Step 3. */
+export const SOFT_TISSUE_CATALOG: CodedOption[] = [
+  { code: 'CHK', name: 'Cheeks — normal', fromReference: false, aliases: ['Cheeks — normal'] },
+  { code: 'LAC/B', name: 'Buccal (cheek) laceration / ulceration', fromReference: true, aliases: ['Cheeks — ulceration/laceration'] },
+  { code: 'TNG', name: 'Tongue — normal', fromReference: false, aliases: ['Tongue — normal'] },
+  { code: 'LAC/L', name: 'Lingual (tongue) laceration / ulcer', fromReference: true, aliases: ['Tongue — laceration/ulcer'] },
+  { code: 'PAL', name: 'Palate — normal', fromReference: false, aliases: ['Palate — normal'] },
+  { code: 'PAL/AB', name: 'Palate — abnormal', fromReference: false, aliases: ['Palate — abnormal'] },
+  { code: 'GIN', name: 'Gingiva — normal', fromReference: false, aliases: ['Gingiva — normal'] },
+  { code: 'GIN/INF', name: 'Gingiva — inflammation / recession', fromReference: false, aliases: ['Gingiva — inflammation/recession'] },
+];
+
+export const SOFT_TISSUE_OPTIONS: readonly string[] = SOFT_TISSUE_CATALOG.map((o) =>
+  // normal entries read better without a code in front of them
+  o.name.endsWith('— normal') ? o.name : codedLabel(o)
+);
 
 /** Things the clinician DID. Findings (what was wrong) live in
  * TOOTH_FINDING_OPTIONS / PATHOLOGY_OPTIONS, never here. */
@@ -303,6 +359,7 @@ export const COUNTRY_CODES: CountryCode[] = [
 ] as const;
 
 export const LATERAL_EXCURSION_OPTIONS: LateralExcursion[] = ['Smooth', 'Step', 'Mouth opens to slide'];
+export const OCCLUSAL_CONTACT_OPTIONS: OcclusalContact[] = ['Full', 'Partial', 'Minimal'];
 export const ROSTROCAUDAL_EXCURSION_OPTIONS: RostrocaudalExcursion[] = ['Normal', 'Reduced', 'Painful'];
 export const TABLE_ANGLE_OPTIONS: TableAngle[] = ['Flat', 'Normal', 'Steep'];
 export const TMJ_PAIN_OPTIONS: TmjPainLevel[] = ['None', 'Mild', 'Moderate', 'Severe'];
@@ -361,7 +418,7 @@ export function createInitialNerveBlocks(): NerveBlockEntry[] {
 }
 
 function createEmptyExcursionAssessment(): ExcursionAssessment {
-  return { excursion: '', postDentalExcursion: '', percentOcclusion: '', postDentalPercentOcclusion: '' };
+  return { excursion: '', postDentalExcursion: '', occlusalContact: '', postDentalOcclusalContact: '' };
 }
 
 function createEmptyTableAngleAssessment(): TableAngleAssessment {
@@ -399,6 +456,7 @@ export function createInitialReport(): DentalReportData {
     bodyConditionScore: '',
     color: '',
     history: [],
+    physicalExam: [],
     sedationUsed: false,
     sedationDrugs: createInitialSedationDrugs(),
     nerveBlockUsed: false,

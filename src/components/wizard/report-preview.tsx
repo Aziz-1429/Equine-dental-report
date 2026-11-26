@@ -1,7 +1,7 @@
 'use client';
 
 import { DentalReportData, ReportPhoto, ToothFinding, toothType } from '@/lib/types';
-import { getStatusOption } from '@/components/dental/dentalData';
+import { getStatusOption, findingLabel, INFUNDIBULAR_CARIES_CODE } from '@/components/dental/dentalData';
 import { HorseLogoForPDF } from '@/components/logo';
 
 const BRAND_COLOR = '#441752';
@@ -194,8 +194,8 @@ function ExamMeasurementsBlock({ data }: { data: DentalReportData }) {
             <td style={{ padding: '6px', border: `0.5px solid ${SECONDARY_COLOR}`, verticalAlign: 'top' }}>
               <PillRow label="Lateral Excursion" value={m.farside.excursion} />
               <PillRow label="Post Dental Work" value={m.farside.postDentalExcursion} />
-              <PillRow label="Percent of Occlusion" value={m.farside.percentOcclusion} />
-              <PillRow label="Post Dental %" value={m.farside.postDentalPercentOcclusion} />
+              <PillRow label="Occlusal Contact" value={m.farside.occlusalContact} />
+              <PillRow label="Occlusal Contact — Post" value={m.farside.postDentalOcclusalContact} />
             </td>
             <td style={{ padding: '6px', border: `0.5px solid ${SECONDARY_COLOR}`, verticalAlign: 'top' }}>
               <PillRow label="Rostro-caudal Excursion" value={m.rostrocaudalExcursion} />
@@ -204,8 +204,8 @@ function ExamMeasurementsBlock({ data }: { data: DentalReportData }) {
             <td style={{ padding: '6px', border: `0.5px solid ${SECONDARY_COLOR}`, verticalAlign: 'top' }}>
               <PillRow label="Lateral Excursion" value={m.nearside.excursion} />
               <PillRow label="Post Dental Work" value={m.nearside.postDentalExcursion} />
-              <PillRow label="Percent of Occlusion" value={m.nearside.percentOcclusion} />
-              <PillRow label="Post Dental %" value={m.nearside.postDentalPercentOcclusion} />
+              <PillRow label="Occlusal Contact" value={m.nearside.occlusalContact} />
+              <PillRow label="Occlusal Contact — Post" value={m.nearside.postDentalOcclusalContact} />
             </td>
           </tr>
         </tbody>
@@ -268,6 +268,19 @@ function Tag({ label, color = 'brand' }: { label: string; color?: 'brand' | 'amb
       </text>
     </svg>
   );
+}
+
+/** "PTS — Sharp enamel points, INF/CA — Infundibular caries (Grade 3)" */
+function toothFindingsText(t: ToothFinding): string {
+  return t.findings
+    .map((code) => {
+      const label = findingLabel(code);
+      if (code === INFUNDIBULAR_CARIES_CODE) {
+        return t.infundibularCariesGrade ? `${label} (Grade ${t.infundibularCariesGrade})` : `${label} (grade not recorded)`;
+      }
+      return label;
+    })
+    .join(', ');
 }
 
 function toothFindingsList(teeth: Record<string, ToothFinding>) {
@@ -352,6 +365,18 @@ export function ReportPreview({ data, id = 'pdf-report-content' }: { data: Denta
         </div>
       )}
 
+      {/* Physical examination */}
+      {(data.physicalExam ?? []).length > 0 && (
+        <div data-pdf-section style={sectionStyle}>
+          <SectionTitle>Physical Examination Findings</SectionTitle>
+          <div>
+            {data.physicalExam.map((p) => (
+              <Tag key={p} label={p} color={p.startsWith('No abnormalities') ? 'green' : 'amber'} />
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Sedation */}
       {data.sedationUsed && activeDrugs.length > 0 && (
         <div data-pdf-section style={sectionStyle}>
@@ -413,7 +438,7 @@ export function ReportPreview({ data, id = 'pdf-report-content' }: { data: Denta
                   <td style={{ padding: '4px 6px 4px 0', fontWeight: 700, color: BRAND_COLOR }}>{t.toothNumber}</td>
                   <td style={{ padding: '4px 6px', color: '#64748b' }}>{toothType(t.toothNumber)}</td>
                   <td style={{ padding: '4px 6px', color: '#334155' }}>{getStatusOption(t.status).label}</td>
-                  <td style={{ padding: '4px 6px', color: '#334155' }}>{t.findings.join(', ') || '—'}</td>
+                  <td style={{ padding: '4px 6px', color: '#334155' }}>{toothFindingsText(t) || '—'}</td>
                   <td style={{ padding: '4px 6px', color: '#334155' }}>{t.severity || '—'}</td>
                   <td style={{ padding: '4px 0 4px 6px', color: '#334155' }}>{t.notes || '—'}</td>
                 </tr>

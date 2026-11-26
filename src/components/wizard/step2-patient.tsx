@@ -1,7 +1,7 @@
 'use client';
 
 import { useFormContext, useFieldArray } from 'react-hook-form';
-import { Heart, Syringe, Plus, Trash2, ClipboardList, Activity, ChevronDown } from 'lucide-react';
+import { Heart, Syringe, Plus, Trash2, ClipboardList, Activity, ChevronDown, Stethoscope } from 'lucide-react';
 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -29,13 +29,25 @@ import {
   HORSE_COLOR_OPTIONS,
   SEDATION_DRUGS,
   HISTORY_OPTIONS,
+  PHYSICAL_EXAM_OPTIONS,
   NERVE_BLOCK_OPTIONS,
   NERVE_BLOCK_SIDE_OPTIONS,
   LOCAL_ANESTHETIC_DRUGS,
   NerveBlockSide,
 } from '@/lib/types';
 
-function HistoryDropdown({ value, onChange }: { value: string[]; onChange: (next: string[]) => void }) {
+/** Generic multi-select dropdown (History, Physical Examination). */
+function MultiSelectDropdown({
+  options,
+  value,
+  onChange,
+  placeholder,
+}: {
+  options: readonly string[];
+  value: string[];
+  onChange: (next: string[]) => void;
+  placeholder: string;
+}) {
   const toggle = (option: string) => {
     onChange(value.includes(option) ? value.filter((v) => v !== option) : [...value, option]);
   };
@@ -44,12 +56,12 @@ function HistoryDropdown({ value, onChange }: { value: string[]; onChange: (next
     <details className="group rounded-lg border border-slate-200 dark:border-slate-700">
       <summary className="flex h-12 cursor-pointer list-none items-center justify-between rounded-lg px-4 text-base text-slate-700 dark:text-slate-300 [&::-webkit-details-marker]:hidden">
         <span className={value.length === 0 ? 'text-slate-400' : ''}>
-          {value.length === 0 ? 'Select presenting signs' : `${value.length} selected`}
+          {value.length === 0 ? placeholder : `${value.length} selected`}
         </span>
         <ChevronDown className="h-4 w-4 shrink-0 text-slate-400 transition-transform group-open:rotate-180" />
       </summary>
       <div className="space-y-1 border-t border-slate-200 p-2 dark:border-slate-700">
-        {HISTORY_OPTIONS.map((option) => (
+        {options.map((option) => (
           <label
             key={option}
             className="flex items-center gap-2.5 rounded-md p-2 text-sm text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
@@ -80,6 +92,7 @@ export function Step2Patient() {
   const sedationUsed = watch('sedationUsed');
   const nerveBlockUsed = watch('nerveBlockUsed');
   const history = watch('history');
+  const physicalExam = watch('physicalExam');
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -283,7 +296,34 @@ export function Step2Patient() {
           </div>
         </CardHeader>
         <CardContent>
-          <HistoryDropdown value={history} onChange={(next) => setValue('history', next)} />
+          <MultiSelectDropdown
+            options={HISTORY_OPTIONS}
+            value={history}
+            onChange={(next) => setValue('history', next)}
+            placeholder="Select presenting signs"
+          />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <div className="flex h-8 w-8 items-center justify-center rounded-md bg-primary/10 text-primary">
+              <Stethoscope className="h-4 w-4" />
+            </div>
+            <div>
+              <CardTitle className="text-lg">Physical Examination</CardTitle>
+              <CardDescription>General and extra-oral findings before the oral exam</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <MultiSelectDropdown
+            options={PHYSICAL_EXAM_OPTIONS}
+            value={physicalExam}
+            onChange={(next) => setValue('physicalExam', next)}
+            placeholder="Select physical exam findings"
+          />
         </CardContent>
       </Card>
 
