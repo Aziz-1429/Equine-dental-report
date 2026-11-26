@@ -118,7 +118,12 @@ interface ToothExamPanelProps {
  * fixed bottom-sheet container (see the `dental-exam` page) — this
  * component itself has no positioning opinion, only the form.
  */
+/** Reference code for an unerupted ("blind") wolf tooth. */
+const BLIND_WOLF_CODE = 'TU';
+
 export function ToothExamPanel({ finding, onChange, onMarkStatus, onClear, onClose }: ToothExamPanelProps) {
+  const isBlindWolf = finding.status !== 'absent' && finding.findings.includes(BLIND_WOLF_CODE);
+
   useEffect(() => {
     const handleKeyDown = (e: globalThis.KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -154,26 +159,59 @@ export function ToothExamPanel({ finding, onChange, onMarkStatus, onClear, onClo
               Wolf Tooth — Quick Mark
             </Label>
             <p className="text-[11px] leading-snug text-amber-700/80 dark:text-amber-400/80">
-              Not every horse has this tooth — absence is normal, not a pathology. Flag whether it&apos;s present, and if so, whether it was extracted.
+              Not every horse has this tooth — absence is normal, not a pathology. Flag whether it&apos;s erupted, blind
+              (unerupted, under the gum — code TU) or not present, and whether it was extracted.
             </p>
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={() =>
-                  onChange({ status: finding.status === 'absent' ? 'normal' : finding.status, examined: true })
+                  onChange({
+                    status: finding.status === 'absent' ? 'normal' : finding.status,
+                    findings: finding.findings.filter((f) => f !== BLIND_WOLF_CODE),
+                    examined: true,
+                  })
                 }
                 className={cn(
                   'flex-1 rounded-md border px-2.5 py-1.5 text-xs font-semibold transition-colors',
-                  finding.status !== 'absent'
+                  finding.status !== 'absent' && !isBlindWolf
                     ? 'border-transparent bg-emerald-600 text-white'
                     : 'border-slate-300 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400'
                 )}
               >
-                Present
+                Erupted
               </button>
               <button
                 type="button"
-                onClick={() => onChange({ status: 'absent', examined: true })}
+                onClick={() =>
+                  // A blind wolf tooth is present but unerupted: charted as
+                  // abnormal with the reference code TU on the tooth.
+                  onChange({
+                    status: finding.status === 'extracted' ? 'extracted' : 'abnormal',
+                    findings: finding.findings.includes(BLIND_WOLF_CODE)
+                      ? finding.findings
+                      : [...finding.findings, BLIND_WOLF_CODE],
+                    examined: true,
+                  })
+                }
+                className={cn(
+                  'flex-1 rounded-md border px-2.5 py-1.5 text-xs font-semibold transition-colors',
+                  isBlindWolf
+                    ? 'border-transparent bg-amber-600 text-white'
+                    : 'border-slate-300 bg-white text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-400'
+                )}
+              >
+                Blind (TU)
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  onChange({
+                    status: 'absent',
+                    findings: finding.findings.filter((f) => f !== BLIND_WOLF_CODE),
+                    examined: true,
+                  })
+                }
                 className={cn(
                   'flex-1 rounded-md border px-2.5 py-1.5 text-xs font-semibold transition-colors',
                   finding.status === 'absent'
@@ -189,7 +227,11 @@ export function ToothExamPanel({ finding, onChange, onMarkStatus, onClear, onClo
                 <button
                   type="button"
                   onClick={() =>
-                    onChange({ status: finding.status === 'extracted' ? 'normal' : finding.status, examined: true })
+                    onChange({
+                      status:
+                        finding.status === 'extracted' ? (isBlindWolf ? 'abnormal' : 'normal') : finding.status,
+                      examined: true,
+                    })
                   }
                   className={cn(
                     'flex-1 rounded-md border px-2.5 py-1.5 text-xs font-semibold transition-colors',
